@@ -1,0 +1,1210 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#ffffff">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="雙人排班">
+<link rel="manifest" href="manifest.webmanifest">
+<title>雙人排班表</title>
+<style>
+:root{--bg:#f6f7f9;--card:#fff;--text:#16181b;--muted:#747982;--line:#e5e7eb;--accent:#17191c}
+*{box-sizing:border-box}html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans TC",sans-serif}
+button,input,select,textarea{font:inherit}button{touch-action:manipulation}
+.app{width:100%;max-width:720px;margin:auto;padding:calc(14px + env(safe-area-inset-top)) 9px calc(90px + env(safe-area-inset-bottom))}
+header{padding:4px 2px 12px}.brand{font-size:22px;font-weight:850}.sub{font-size:12px;color:var(--muted);margin-top:2px}
+.card,.settingsCard{background:#fff;border:1px solid var(--line);border-radius:18px;padding:12px}
+.calendarHead{display:grid;grid-template-columns:44px 1fr 44px;align-items:center;margin-bottom:8px}
+.calendarHead h2{font-size:16px;margin:0;text-align:center;line-height:1.35}.arrow{width:44px;height:44px;border:0;border-radius:12px;background:#f1f2f4;font-size:24px}
+.week,.calendar{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px}.week div{text-align:center;font-size:12px;color:var(--muted);padding:6px 0}
+.day{appearance:none;width:100%;min-height:118px;padding:5px 3px;border:1px solid var(--line);border-radius:11px;background:#fff;text-align:left;color:var(--text);position:relative;overflow:hidden}
+.day.other{opacity:.26}.day.today{outline:2px solid var(--accent);outline-offset:-1px}.num{font-size:12px;font-weight:800;padding-left:2px;color:var(--date-color,inherit)!important}
+.shiftRow{display:grid;grid-template-columns:22px 1fr;align-items:center;gap:2px;margin-top:4px;font-size:11px}
+.mark{text-align:center;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.badge{border-radius:7px;padding:4px 1px;text-align:center;font-weight:850;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.note{margin-top:5px;padding:4px 3px;border-radius:7px;background:#f4f5f7;color:#4b5563;font-size:9px;line-height:1.25;min-height:23px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.dot{position:absolute;right:5px;top:5px;width:6px;height:6px;border-radius:50%;background:#111}
+.view{display:none}.view.active{display:block}.stack{display:grid;gap:12px}.settingsCard h3{margin:0 0 8px;font-size:16px}
+.settingsTabs{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin-bottom:12px}
+.settingsTab{min-height:44px;border:1px solid var(--line);border-radius:12px;background:#fff;color:#555;font-size:13px;font-weight:800;padding:6px}
+.settingsTab.active{background:#17191c;color:#fff;border-color:#17191c}
+.settingsSubpage{display:none}.settingsSubpage.active{display:block}
+.help{font-size:12px;color:var(--muted);line-height:1.5;margin:0 0 8px}
+label{display:block;font-size:13px;font-weight:750;margin:11px 0 6px}
+input[type=date],input[type=number],input[type=text],select,textarea{width:100%;border:1px solid var(--line);border-radius:12px;background:#fff;padding:11px 12px;font-size:16px}
+textarea{min-height:82px;resize:vertical}.readonly{background:#f4f5f7!important;color:#666}
+.btn{width:100%;min-height:46px;border:0;border-radius:12px;font-weight:850;margin-top:10px}.primary{background:#17191c;color:#fff}.secondary{background:#eef0f2;color:#17191c}.danger{background:#fff1f1;color:#a00;border:1px solid #ffd3d3}
+.peoplePreview{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}.personBox{text-align:center;border:1px solid var(--line);border-radius:12px;padding:9px;background:#fafafa}.personBox strong{display:block;font-size:20px}.personBox span{font-size:12px;color:var(--muted)}
+.status{padding:10px 12px;border-radius:12px;background:#f2f3f5;font-size:12px;line-height:1.55;color:#555}
+.yearRow{display:grid;grid-template-columns:1fr 1.5fr;gap:8px}.generated{font-size:12px;line-height:1.55;color:#555;background:#fafafa;border:1px solid var(--line);border-radius:12px;padding:9px;margin-top:9px}
+.list{font-size:12px}.listRow{display:grid;grid-template-columns:92px 1fr;gap:8px;padding:8px 0;border-bottom:1px solid var(--line)}.listRow:last-child{border:0}
+.bottom{position:fixed;left:0;right:0;bottom:0;z-index:20;background:#ffffffee;backdrop-filter:blur(14px);border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom)}
+.nav{max-width:720px;margin:auto;padding:7px 8px;display:grid;grid-template-columns:1fr 1fr;gap:6px}.navBtn{min-height:50px;border:0;border-radius:12px;background:transparent;color:#666;font-size:12px;font-weight:750}.navBtn b{display:block;font-size:18px}.navBtn.active{background:#17191c;color:#fff}
+@media(max-width:380px){.app{padding-left:6px;padding-right:6px}.card{padding:7px}.week,.calendar{gap:3px}.day{min-height:111px;padding-left:2px;padding-right:2px}.shiftRow{grid-template-columns:18px 1fr;font-size:10px}.note{font-size:8.5px}}
+
+.calendarWrap{width:100%;max-width:100%;overflow-x:hidden}
+.weekHead,.calendar{width:100%;max-width:100%;grid-template-columns:repeat(7,minmax(0,1fr))}
+.weekHead>*,
+.calendar>*{min-width:0}
+.day{box-sizing:border-box;overflow:hidden}
+.shiftRow,.note{min-width:0}
+.note{overflow:hidden;text-overflow:ellipsis}
+
+
+html{overflow-y:scroll}
+body{width:100%;max-width:100%;overflow-x:hidden}
+
+
+.calendarHead.calendarToolbar{
+  grid-template-columns:44px minmax(0,1fr) 44px auto;
+  gap:8px;
+}
+.monthJumpBtn{
+  height:44px;border:0;border-radius:12px;background:#f1f2f4;
+  display:flex;align-items:center;justify-content:center;gap:5px;
+  padding:0 10px;font:inherit;font-size:16px;font-weight:800;cursor:pointer;
+  min-width:0;
+}
+.monthJumpBtn #monthTitle{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.monthCaret{font-size:10px;opacity:.65}
+.todayBtn{
+  height:44px;border:0;border-radius:12px;background:#f1f2f4;
+  padding:0 12px;font-weight:800;cursor:pointer;white-space:nowrap
+}
+.ymPicker{
+  position:fixed;inset:0;z-index:100;background:rgba(0,0,0,.35);
+  display:none;align-items:flex-end;justify-content:center
+}
+.ymPicker.show{display:flex}
+.ymPanel{
+  width:min(520px,100%);box-sizing:border-box;background:#fff;
+  border-radius:20px 20px 0 0;padding:18px 16px 22px;
+  box-shadow:0 -8px 30px rgba(0,0,0,.16)
+}
+.ymTop{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.ymTop strong{font-size:17px}
+.ymYearBar{display:grid;grid-template-columns:42px 1fr 42px;align-items:center;gap:8px;margin-bottom:12px}
+.ymYearBar button,.ymClose{
+  border:0;border-radius:12px;background:#f1f2f4;height:42px;font-weight:800;font-size:18px
+}
+#ymYearLabel{text-align:center;font-weight:900;font-size:18px}
+.ymMonths{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.ymMonths button{
+  border:1px solid #e5e7eb;background:#fff;border-radius:12px;
+  padding:12px 6px;font-weight:800;font-size:15px
+}
+.ymMonths button.active{background:#111827;color:#fff;border-color:#111827}
+.ymClose{width:100%;margin-top:12px;font-size:14px}
+@media(max-width:420px){
+  .calendarHead.calendarToolbar{grid-template-columns:40px minmax(0,1fr) 40px auto;gap:6px}
+  .calendarHead.calendarToolbar .arrow{width:40px;height:40px}
+  .monthJumpBtn,.todayBtn{height:40px}
+  .todayBtn{padding:0 9px}
+}
+
+
+#holidayPage input[type="color"]{width:54px;height:36px;padding:2px;border:1px solid #d1d5db;border-radius:8px;background:#fff}
+
+#calendar,#weekHeader,#monthJumpBtn,#todayBtn{font-family:var(--calendar-font,inherit)}
+#monthJumpBtn,#todayBtn{
+  font-weight:900!important;
+  font-synthesis:weight;
+  -webkit-text-stroke:.35px currentColor;
+  text-shadow:.2px 0 currentColor,-.2px 0 currentColor;
+}
+</style>
+</head>
+<body>
+<div class="app">
+<header><div class="brand">雙人排班表</div><div class="sub">顯示本期原生日曆假日總數</div></header>
+
+<section id="calendarView" class="view active">
+  <div class="card">
+    <div class="calendarHead calendarToolbar">
+      <button class="arrow prev" type="button" aria-label="上一月">‹</button>
+      <button class="monthJumpBtn" id="monthJumpBtn" type="button"><span id="monthTitle"></span><span class="monthCaret">▼</span></button>
+      <button class="arrow next" type="button" aria-label="下一月">›</button>
+      <button class="todayBtn" id="todayBtn" type="button">今天</button>
+    </div>
+    <div id="weekHeader" class="week"></div>
+    <div id="calendar" class="calendar"></div>
+  </div>
+</section>
+
+<section id="settingsView" class="view">
+  <div class="settingsTabs">
+    <button class="settingsTab active" type="button" data-settings-page="peoplePage">名稱顯示</button>
+    <button class="settingsTab" type="button" data-settings-page="holidayPage">節日標記</button>
+    <button class="settingsTab" type="button" data-settings-page="shiftPage">班別修改</button>
+    <button class="settingsTab" type="button" data-settings-page="logicPage">班別邏輯</button>
+    <button class="settingsTab" type="button" data-settings-page="typePage">班別／假別管理</button>
+  </div>
+
+  <div id="peoplePage" class="settingsSubpage active">
+    <div class="stack">
+      <div class="status">調整 A / B 在月曆上顯示的名稱與圖示。</div>
+      <div class="settingsCard">
+        <h3>名稱與圖示</h3>
+        <div class="yearRow">
+          <div><label>A 名稱</label><input id="aName" type="text" maxlength="10"></div>
+          <div><label>A 圖示</label><input id="aIcon" type="text" maxlength="4"></div>
+        </div>
+        <div class="yearRow">
+          <div><label>B 名稱</label><input id="bName" type="text" maxlength="10"></div>
+          <div><label>B 圖示</label><input id="bIcon" type="text" maxlength="4"></div>
+        </div>
+        <div class="peoplePreview">
+          <div class="personBox"><strong id="aPreviewIcon"></strong><span id="aPreviewName"></span></div>
+          <div class="personBox"><strong id="bPreviewIcon"></strong><span id="bPreviewName"></span></div>
+        </div>
+        <button id="savePeople" class="btn primary" type="button">儲存名稱 / 圖示</button>
+      </div>
+
+      <div class="settingsCard">
+        <h3>月曆顯示設定</h3>
+        <p class="help">例如每期第一天選 21，畫面會以「21 日～下個月 20 日」作為一期。假日總數包含週六日、國定／民俗節日及其補假日；國定假日與補假會用很淺的底色標示。</p>
+        <label>每期第一天</label>
+        <select id="periodStartDay"></select>
+        <label>每週第一天</label>
+        <select id="weekStart">
+          <option value="0">星期日</option>
+          <option value="1">星期一</option>
+          <option value="2">星期二</option>
+          <option value="3">星期三</option>
+          <option value="4">星期四</option>
+          <option value="5">星期五</option>
+          <option value="6">星期六</option>
+        </select>
+
+        <div class="yearRow">
+          <div>
+            <label>週末底色</label>
+            <input id="weekendColor" type="color" value="#faf0d2">
+          </div>
+          <div>
+            <label>週末日期顏色</label>
+            <input id="weekendDateColor" type="color" value="#ff0000">
+          </div>
+        </div>
+        <div class="yearRow">
+          <div>
+            <label>國定假日底色</label>
+            <input id="publicHolidayColor" type="color" value="#faf0d2">
+          </div>
+          <div>
+            <label>國定假日期顏色</label>
+            <input id="publicHolidayDateColor" type="color" value="#ff0000">
+          </div>
+        </div>
+        <div class="yearRow">
+          <div>
+            <label>補假底色</label>
+            <input id="compHolidayColor" type="color" value="#faf0d2">
+          </div>
+          <div>
+            <label>補假日期顏色</label>
+            <input id="compHolidayDateColor" type="color" value="#ff0000">
+          </div>
+        </div>
+
+        <div class="yearRow">
+          <div>
+            <label>MC 日期底色</label>
+            <input id="mcColor" type="color" value="#ffe4ec">
+          </div>
+          <div>
+            <label>MC 日期顏色</label>
+            <input id="mcDateColor" type="color" value="#d81b60">
+          </div>
+        </div>
+
+        
+        <div class="yearRow">
+          <div>
+            <label>當日框線粗細</label>
+            <select id="todayBorderWidth">
+              <option value="1">1 px</option>
+              <option value="2">2 px</option>
+              <option value="3">3 px</option>
+              <option value="4">4 px</option>
+              <option value="5">5 px</option>
+              <option value="6">6 px</option>
+            </select>
+          </div>
+          <div>
+            <label>當日框線顏色</label>
+            <input id="todayBorderColor" type="color" value="#111827">
+          </div>
+        </div>
+<label>月曆字體</label>
+        <select id="calendarFont">
+          <option value="system">系統預設</option>
+          <option value="sans">黑體</option>
+          <option value="rounded">圓體風格</option>
+          <option value="serif">明體</option>
+          <option value="kai">標楷體</option>
+          <option value="mono">等寬字體</option>
+        </select>
+        <button id="saveDisplay" class="btn primary" type="button">儲存月曆顯示設定</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="holidayPage" class="settingsSubpage">
+    <div class="stack">
+      <div class="status">節日與私人行程集中在這裡管理。</div>
+      <div class="settingsCard">
+        <h3>自動產生節日</h3>
+        <p class="help">固定日期與農曆節日會自動計算，不必每年逐筆輸入。</p>
+        <div class="yearRow">
+          <div><label>年份</label><input id="holidayYear" type="number" min="2026" max="2099" value="2027"></div>
+          <div><label>類型</label><select id="holidayType"><option value="common">台灣常用節日</option><option value="core">主要國定 / 民俗節日</option></select></div>
+        </div>
+        <button id="generateHolidays" class="btn primary" type="button">一鍵產生該年度節日</button>
+        <button id="removeGenerated" class="btn secondary" type="button">清除該年度自動節日</button>
+        <div id="holidayResult" class="generated">尚未產生。</div>
+      </div>
+
+      <div class="settingsCard">
+        <h3>單日標記</h3>
+        <label>日期</label><input id="holidayEditDate" type="date">
+        <label>原表 / 自動節日</label><input id="holidayAutoNote" class="readonly" type="text" readonly>
+        <label>自訂標記 / 行程</label><textarea id="holidayCustomNote" maxlength="50" placeholder="例如：高雄、聚餐、回診、開會"></textarea>
+        <button id="saveHolidayNote" class="btn primary" type="button">儲存這天標記</button>
+        <button id="clearHolidayNote" class="btn secondary" type="button">清除這天自訂標記</button>
+      </div>
+    </div>
+  
+<div class="card">
+  <h3>當日標記</h3>
+  <div class="row">
+    <label>線條粗細</label>
+    <select id="todayBorderWidth">
+      <option value="1">1 px</option>
+      <option value="2">2 px</option>
+      <option value="3">3 px</option>
+      <option value="4">4 px</option>
+      <option value="5">5 px</option>
+      <option value="6">6 px</option>
+    </select>
+  </div>
+  <div class="row">
+    <label>線條顏色</label>
+    <input id="todayBorderColor" type="color">
+  </div>
+</div>
+
+<div class="card">
+  <h3>MC 顯示</h3>
+  <div class="row">
+    <label>日期顏色</label>
+    
+  </div>
+</div>
+</div>
+
+  <div id="shiftPage" class="settingsSubpage">
+    <div class="stack">
+      <div class="status">臨時改班只覆寫指定日期，取消後會恢復原本班別。</div>
+      <div class="settingsCard">
+        <h3>修改某一天班別</h3>
+        <label>日期</label><input id="editDate" type="date">
+        <label id="aShiftLabel">A 班別</label><select id="editA"></select>
+        <label id="bShiftLabel">B 班別</label><select id="editB"></select>
+        <label class="switchLine"><input id="editMC" type="checkbox"> MC來</label>
+        <button id="saveDay" class="btn primary" type="button">儲存班別修改</button>
+        <button id="resetDay" class="btn secondary" type="button">恢復原本班別</button>
+      </div>
+      <div class="settingsCard">
+        <h3>批量修改班別</h3>
+        <p class="help">可一次輸入很多「不連續日期」。支援逗號、頓號、空白或換行分隔，例如：9/1, 9/3, 9/8, 9/12。沒有填年份時會使用目前顯示期間的年份。</p>
+
+        <label>日期清單</label>
+        <textarea id="batchDates" rows="5" placeholder="例如：
+2026/9/1
+2026/9/3
+2026/9/8
+2026/9/12"></textarea>
+
+        <label class="switchLine"><input id="batchAEnabled" type="checkbox"> 修改 <span id="batchALabel">A</span></label>
+        <select id="batchAShift"></select>
+
+        <label class="switchLine"><input id="batchBEnabled" type="checkbox"> 修改 <span id="batchBLabel">B</span></label>
+        <select id="batchBShift"></select>
+
+        <button id="applyBatch" class="btn primary" type="button">套用批量修改</button>
+        <button id="restoreBatch" class="btn secondary" type="button">批量恢復原本班別</button>
+      </div>
+
+<div class="settingsCard">
+        <h3>已自訂日期</h3><div id="customList" class="list">尚無資料</div>
+      </div>
+    </div>
+  </div>
+
+<div id="logicPage" class="settingsSubpage">
+    <div class="stack">
+        <div class="settingsCard">
+          <h3>班別邏輯設定</h3>
+          <p class="help">這是設定頁第 4 頁。啟用後，從「邏輯起始日」開始會直接依照新的輪班順序顯示；手動單日／批量修改仍然最優先。起始日前則保留原始班表。</p>
+
+          <h4 id="logicATitle">A 輪班邏輯</h4>
+          <label class="switchLine"><input id="logicAEnabled" type="checkbox"> 啟用 A 自動輪班</label>
+          <label>A 邏輯起始日</label>
+          <input id="logicAStart" type="date">
+          <label>A 輪班順序</label>
+          <textarea id="logicASequence" rows="4" placeholder="例如：早,早,早,早,V,V,中,中,中,中,V,V,夜,夜,夜,夜,V"></textarea>
+          <p class="help">用逗號分隔，每一格代表一天。空班請輸入「空白」或「-」。</p>
+
+          <hr>
+
+          <h4 id="logicBTitle">B 輪班邏輯</h4>
+          <label class="switchLine"><input id="logicBEnabled" type="checkbox"> 啟用 B 自動輪班</label>
+          <label>B 邏輯起始日</label>
+          <input id="logicBStart" type="date">
+          <label>B 輪班順序</label>
+          <textarea id="logicBSequence" rows="4" placeholder="例如：早,早,V,V,中,中,V,V,夜,夜,V,V"></textarea>
+          <p class="help">之後若新人加入，只要把新的循環順序貼進來並調整起始日即可。</p>
+
+          <p id="logicPriorityHint" class="help"><strong>顯示優先順序：</strong>手動修改 ＞ 原始班表 ＞ 班別邏輯（原始班表無資料時）。</p>
+          <button id="saveLogic" class="btn primary" type="button">儲存班別邏輯</button>
+          <button id="resetLogic" class="btn" type="button">恢復預設邏輯</button>
+        </div>
+    </div>
+  </div>
+
+  <div id="typePage" class="settingsSubpage">
+    <div class="stack">
+      <div class="settingsCard">
+        <h3>班別／假別管理</h3>
+        <p class="help">之後有新的假別，不需要再改程式。新增後會自動出現在單日修改與批量修改選單。</p>
+        <div class="yearRow">
+          <div>
+            <label>代碼</label>
+            <input id="typeCode" type="text" maxlength="8" placeholder="例如：病">
+          </div>
+          <div>
+            <label>顯示名稱</label>
+            <input id="typeLabel" type="text" maxlength="12" placeholder="例如：病假">
+          </div>
+        </div>
+        <label>顯示顏色</label>
+        <input id="typeColor" type="color" value="#eeeeee">
+        <button id="addType" class="btn primary" type="button">新增班別／假別</button>
+      </div>
+
+      <div class="settingsCard">
+        <h3>目前班別／假別</h3>
+        <div id="typeList" class="list"></div>
+      </div>
+    </div>
+  </div>
+
+</section>
+
+      
+
+</div>
+
+<nav class="bottom"><div class="nav">
+  <button class="navBtn active" data-target="calendarView" type="button"><b>👥</b>班表</button>
+  <button class="navBtn" data-target="settingsView" type="button"><b>⚙️</b>設定</button>
+</div></nav>
+
+
+<div class="ymPicker" id="ymPicker" aria-hidden="true">
+  <div class="ymPanel" role="dialog" aria-modal="true" aria-label="快速選擇年月">
+    <div class="ymTop"><strong>快速跳到年月</strong></div>
+    <div class="ymYearBar">
+      <button type="button" id="ymPrevYear" aria-label="上一年">‹</button>
+      <div id="ymYearLabel"></div>
+      <button type="button" id="ymNextYear" aria-label="下一年">›</button>
+    </div>
+    <div class="ymMonths" id="ymMonths"></div>
+    <button type="button" class="ymClose" id="ymClose">取消</button>
+  </div>
+</div>
+
+<script>
+(function(){
+const imported={"a":{"2026-01-01":"夜","2026-01-02":"夜","2026-01-03":"夜","2026-01-04":"夜","2026-01-05":"V","2026-01-06":"中","2026-01-07":"中","2026-01-08":"中","2026-01-09":"中","2026-01-10":"V","2026-01-11":"V","2026-01-12":"V","2026-01-13":"早","2026-01-14":"早","2026-01-15":"早","2026-01-16":"早","2026-01-17":"早","2026-01-18":"V","2026-01-19":"V","2026-01-20":"夜","2026-01-21":"夜","2026-01-22":"夜","2026-01-23":"夜","2026-01-24":"夜","2026-01-25":"V","2026-01-26":"中","2026-01-27":"中","2026-01-28":"中","2026-01-29":"中","2026-01-30":"V","2026-01-31":"V","2026-02-01":"V","2026-02-02":"早","2026-02-03":"早","2026-02-04":"早","2026-02-05":"早","2026-02-06":"早","2026-02-07":"V","2026-02-08":"V","2026-02-09":"夜","2026-02-10":"夜","2026-02-11":"夜","2026-02-12":"夜","2026-02-13":"夜","2026-02-14":"V","2026-02-15":"中","2026-02-16":"V","2026-02-17":"V","2026-02-18":"V","2026-02-19":"V","2026-02-20":"V","2026-02-21":"V","2026-02-22":"早","2026-02-23":"早","2026-02-24":"特","2026-02-25":"特","2026-02-26":"特","2026-02-27":"V","2026-02-28":"V","2026-03-01":"V","2026-03-02":"夜","2026-03-03":"夜","2026-03-04":"夜","2026-03-05":"夜","2026-03-06":"V","2026-03-07":"中","2026-03-08":"中","2026-03-09":"中","2026-03-10":"中","2026-03-11":"中","2026-03-12":"V","2026-03-13":"V","2026-03-14":"特","2026-03-15":"早","2026-03-16":"早","2026-03-17":"早","2026-03-18":"早","2026-03-19":"V","2026-03-20":"V","2026-03-21":"夜","2026-03-22":"夜","2026-03-23":"夜","2026-03-24":"夜","2026-03-25":"V","2026-03-26":"V","2026-03-27":"中","2026-03-28":"中","2026-03-29":"中","2026-03-30":"中","2026-03-31":"V","2026-04-01":"V","2026-04-02":"V","2026-04-03":"早","2026-04-04":"早","2026-04-05":"早","2026-04-06":"早","2026-04-07":"早","2026-04-08":"V","2026-04-09":"V","2026-04-10":"夜","2026-04-11":"夜","2026-04-12":"夜","2026-04-13":"夜","2026-04-14":"夜","2026-04-15":"V","2026-04-16":"中","2026-04-17":"中","2026-04-18":"中","2026-04-19":"中","2026-04-20":"中","2026-04-21":"V","2026-04-22":"V","2026-04-23":"早","2026-04-24":"早","2026-04-25":"早","2026-04-26":"早","2026-04-27":"早","2026-04-28":"V","2026-04-29":"V","2026-04-30":"夜","2026-05-01":"夜","2026-05-02":"夜","2026-05-03":"夜","2026-05-04":"夜","2026-05-05":"V","2026-05-06":"中","2026-05-07":"中","2026-05-08":"中","2026-05-09":"中","2026-05-10":"中","2026-05-11":"V","2026-05-12":"V","2026-05-13":"早","2026-05-14":"早","2026-05-15":"早","2026-05-16":"特","2026-05-17":"特","2026-05-18":"V","2026-05-19":"V","2026-05-20":"夜","2026-05-21":"夜","2026-05-22":"夜","2026-05-23":"夜","2026-05-24":"夜","2026-05-25":"中","2026-05-26":"中","2026-05-27":"中","2026-05-28":"中","2026-05-29":"中","2026-05-30":"中","2026-05-31":"V","2026-06-01":"V","2026-06-02":"V","2026-06-03":"早","2026-06-04":"早","2026-06-05":"早","2026-06-06":"早","2026-06-07":"V","2026-06-08":"V","2026-06-09":"夜","2026-06-10":"夜","2026-06-11":"夜","2026-06-12":"夜","2026-06-13":"夜","2026-06-14":"V","2026-06-15":"中","2026-06-16":"中","2026-06-17":"中","2026-06-18":"中","2026-06-19":"中","2026-06-20":"V","2026-06-21":"V","2026-06-22":"早","2026-06-23":"V","2026-06-24":"早","2026-06-25":"早","2026-06-26":"早","2026-06-27":"V","2026-06-28":"V","2026-06-29":"夜","2026-06-30":"夜","2026-07-01":"夜","2026-07-02":"夜","2026-07-03":"夜","2026-07-04":"V","2026-07-05":"中","2026-07-06":"中","2026-07-07":"中","2026-07-08":"中","2026-07-09":"中","2026-07-10":"V","2026-07-11":"V","2026-07-12":"早","2026-07-13":"早","2026-07-14":"早","2026-07-15":"早","2026-07-16":"早","2026-07-17":"V","2026-07-18":"V","2026-07-19":"夜","2026-07-20":"夜","2026-07-21":"夜","2026-07-22":"夜","2026-07-23":"夜","2026-07-24":"V","2026-07-25":"中","2026-07-26":"中","2026-07-27":"中","2026-07-28":"中","2026-07-29":"中","2026-07-30":"V","2026-07-31":"V","2026-08-01":"早","2026-08-02":"早","2026-08-03":"早","2026-08-04":"早","2026-08-05":"早","2026-08-06":"V","2026-08-07":"V","2026-08-08":"特","2026-08-09":"夜","2026-08-10":"夜","2026-08-11":"夜","2026-08-12":"夜","2026-08-13":"V","2026-08-14":"中","2026-08-15":"中","2026-08-16":"中","2026-08-17":"中","2026-08-18":"中","2026-08-19":"V","2026-08-20":"V","2026-08-21":"早","2026-08-22":"中","2026-08-23":"中","2026-08-24":"V","2026-08-25":"V","2026-08-26":"中","2026-08-27":"中","2026-08-28":"中","2026-08-29":"中","2026-08-30":"中","2026-08-31":"V","2026-09-01":"V","2026-09-02":"早","2026-09-03":"早","2026-09-04":"早","2026-09-05":"早","2026-09-06":"V","2026-09-07":"V","2026-09-08":"中","2026-09-09":"中","2026-09-10":"中","2026-09-11":"中","2026-09-12":"中","2026-09-13":"V","2026-09-14":"V","2026-09-15":"早","2026-09-16":"早","2026-09-17":"早","2026-09-18":"早","2026-09-19":"V","2026-09-20":"V","2026-09-21":"中","2026-09-22":"中","2026-09-23":"中","2026-09-24":"中","2026-09-25":"中","2026-09-26":"中","2026-09-27":"早","2026-09-28":"早","2026-09-29":"早","2026-09-30":"早","2026-10-01":"早","2026-10-02":"早","2026-10-03":"早","2026-10-04":"中","2026-10-05":"中","2026-10-06":"中","2026-10-07":"中","2026-10-08":"中","2026-10-09":"V","2026-10-10":"中","2026-10-11":"早","2026-10-12":"早","2026-10-13":"早","2026-10-14":"早","2026-10-15":"早","2026-10-16":"早","2026-10-17":"早","2026-10-18":"中","2026-10-19":"中","2026-10-20":"中","2026-10-21":"中","2026-10-22":"中","2026-10-23":"中","2026-10-24":"中","2026-10-25":"早","2026-10-26":"早","2026-10-27":"早","2026-10-28":"早","2026-10-29":"V","2026-10-30":"早","2026-10-31":"早","2026-11-01":"中","2026-11-02":"中","2026-11-03":"中","2026-11-04":"中","2026-11-05":"中","2026-11-06":"中","2026-11-07":"中","2026-11-08":"早","2026-11-09":"早","2026-11-10":"早","2026-11-11":"早","2026-11-12":"早","2026-11-13":"早","2026-11-14":"早","2026-11-15":"中","2026-11-16":"中","2026-11-17":"中","2026-11-18":"V","2026-11-19":"中","2026-11-20":"中","2026-11-21":"中","2026-11-22":"早","2026-11-23":"早","2026-11-24":"早","2026-11-25":"早","2026-11-26":"早","2026-11-27":"早","2026-11-28":"早","2026-11-29":"中","2026-11-30":"中","2026-12-01":"中","2026-12-02":"中","2026-12-03":"中","2026-12-04":"中","2026-12-05":"中","2026-12-06":"早","2026-12-07":"早","2026-12-08":"V","2026-12-09":"早","2026-12-10":"早","2026-12-11":"早","2026-12-12":"早","2026-12-13":"中","2026-12-14":"中","2026-12-15":"中","2026-12-16":"中","2026-12-17":"中","2026-12-18":"中","2026-12-19":"中","2026-12-20":"早","2023-12-21":"V","2023-12-22":"夜","2023-12-23":"夜","2023-12-24":"夜","2023-12-25":"夜","2023-12-26":"夜","2023-12-27":"V","2023-12-28":"V","2023-12-29":"中","2023-12-30":"中","2023-12-31":"中","2024-01-01":"中","2024-01-02":"V","2024-01-03":"V","2024-01-04":"早","2024-01-05":"早","2024-01-06":"早","2024-01-07":"早","2024-01-08":"早","2024-01-09":"V","2024-01-10":"V","2024-01-11":"夜","2024-01-12":"夜","2024-01-13":"夜","2024-01-14":"夜","2024-01-15":"V","2024-01-16":"V","2024-01-17":"V","2024-01-18":"中","2024-01-19":"中","2024-01-20":"中","2024-01-21":"中","2024-01-22":"V","2024-01-23":"V","2024-01-24":"早","2024-01-25":"早","2024-01-26":"早","2024-01-27":"早","2024-01-28":"早","2024-01-29":"V","2024-01-30":"V","2024-01-31":"V","2024-02-01":"夜","2024-02-02":"夜","2024-02-03":"夜","2024-02-04":"夜","2024-02-05":"V","2024-02-06":"中","2024-02-07":"中","2024-02-08":"特","2024-02-09":"V","2024-02-10":"V","2024-02-11":"V","2024-02-12":"V","2024-02-13":"V","2024-02-14":"早","2024-02-15":"早","2024-02-16":"早","2024-02-17":"早","2024-02-18":"V","2024-02-19":"V","2024-02-20":"夜","2024-02-21":"夜","2024-02-22":"夜","2024-02-23":"夜","2024-02-24":"夜","2024-02-25":"V","2024-02-26":"V","2024-02-27":"中","2024-02-28":"中","2024-02-29":"中","2024-03-01":"中","2024-03-02":"V","2024-03-03":"V","2024-03-04":"早","2024-03-05":"早","2024-03-06":"V","2024-03-07":"早","2024-03-08":"早","2024-03-09":"V","2024-03-10":"V","2024-03-11":"夜","2024-03-12":"夜","2024-03-13":"夜","2024-03-14":"夜","2024-03-15":"V","2024-03-16":"V","2024-03-17":"中","2024-03-18":"中","2024-03-19":"中","2024-03-20":"特","2024-03-21":"V","2024-03-22":"V","2024-03-23":"V","2024-03-24":"早","2024-03-25":"早","2024-03-26":"早","2024-03-27":"早","2024-03-28":"早","2024-03-29":"V","2024-03-30":"V","2024-03-31":"夜","2024-04-01":"夜","2024-04-02":"夜","2024-04-03":"夜","2024-04-04":"V","2024-04-05":"V","2024-04-06":"中","2024-04-07":"中","2024-04-08":"中","2024-04-09":"中","2024-04-10":"中","2024-04-11":"V","2024-04-12":"V","2024-04-13":"換","2024-04-14":"早","2024-04-15":"早","2024-04-16":"早","2024-04-17":"早","2024-04-18":"V","2024-04-19":"V","2024-04-20":"夜","2024-04-21":"特","2024-04-22":"夜","2024-04-23":"夜","2024-04-24":"V","2024-04-25":"V","2024-04-26":"V","2024-04-27":"中","2024-04-28":"中","2024-04-29":"中","2024-04-30":"中","2024-05-01":"V","2024-05-02":"V","2024-05-03":"早","2024-05-04":"早","2024-05-05":"早","2024-05-06":"早","2024-05-07":"早","2024-05-08":"V","2024-05-09":"V","2024-05-10":"V","2024-05-11":"V","2024-05-12":"夜","2024-05-13":"夜","2024-05-14":"夜","2024-05-15":"V","2024-05-16":"中","2024-05-17":"中","2024-05-18":"中","2024-05-19":"中","2024-05-20":"中","2024-05-21":"V","2024-05-22":"V","2024-05-23":"早","2024-05-24":"早","2024-05-25":"早","2024-05-26":"早","2024-05-27":"早","2024-05-28":"V","2024-05-29":"V","2024-05-30":"夜","2024-05-31":"夜","2024-06-01":"夜","2024-06-02":"夜","2024-06-03":"夜","2024-06-04":"V","2024-06-05":"中","2024-06-06":"中","2024-06-07":"中","2024-06-08":"中","2024-06-09":"中","2024-06-10":"V","2024-06-11":"V","2024-06-12":"早","2024-06-13":"早","2024-06-14":"早","2024-06-15":"早","2024-06-16":"早","2024-06-17":"V","2024-06-18":"V","2024-06-19":"特","2024-06-20":"夜","2024-06-21":"夜","2024-06-22":"夜","2024-06-23":"夜","2024-06-24":"V","2024-06-25":"中","2024-06-26":"中","2024-06-27":"中","2024-06-28":"中","2024-06-29":"中","2024-06-30":"V","2024-07-01":"V","2024-07-02":"早","2024-07-03":"早","2024-07-04":"V","2024-07-05":"早","2024-07-06":"早","2024-07-07":"V","2024-07-08":"V","2024-07-09":"夜","2024-07-10":"夜","2024-07-11":"夜","2024-07-12":"夜","2024-07-13":"V","2024-07-14":"V","2024-07-15":"中","2024-07-16":"中","2024-07-17":"中","2024-07-18":"中","2024-07-19":"中","2024-07-20":"V","2024-07-21":"V","2024-07-22":"早","2024-07-23":"早","2024-07-24":"早","2024-07-25":"早","2024-07-26":"早","2024-07-27":"V","2024-07-28":"V","2024-07-29":"夜","2024-07-30":"夜","2024-07-31":"夜","2024-08-01":"夜","2024-08-02":"夜","2024-08-03":"V","2024-08-04":"V","2024-08-05":"中","2024-08-06":"中","2024-08-07":"中","2024-08-08":"中","2024-08-09":"V","2024-08-10":"V","2024-08-11":"早","2024-08-12":"早","2024-08-13":"早","2024-08-14":"早","2024-08-15":"早","2024-08-16":"V","2024-08-17":"V","2024-08-18":"夜","2024-08-19":"夜","2024-08-20":"特","2024-08-21":"夜","2024-08-22":"夜","2024-08-23":"V","2024-08-24":"V","2024-08-25":"特","2024-08-26":"中","2024-08-27":"中","2024-08-28":"中","2024-08-29":"V","2024-08-30":"V","2024-08-31":"早","2024-09-01":"早","2024-09-02":"早","2024-09-03":"早","2024-09-04":"早","2024-09-05":"V","2024-09-06":"V","2024-09-07":"夜","2024-09-08":"夜","2024-09-09":"夜","2024-09-10":"夜","2024-09-11":"夜","2024-09-12":"V","2024-09-13":"特","2024-09-14":"中","2024-09-15":"中","2024-09-16":"中","2024-09-17":"特","2024-09-18":"V","2024-09-19":"V","2024-09-20":"早","2024-09-21":"早","2024-09-22":"早","2024-09-23":"早","2024-09-24":"早","2024-09-25":"V","2024-09-26":"V","2024-09-27":"夜","2024-09-28":"夜","2024-09-29":"夜","2024-09-30":"夜","2024-10-01":"夜","2024-10-02":"V","2024-10-03":"中","2024-10-04":"中","2024-10-05":"中","2024-10-06":"中","2024-10-07":"中","2024-10-08":"V","2024-10-09":"V","2024-10-10":"早","2024-10-11":"早","2024-10-12":"早","2024-10-13":"早","2024-10-14":"早","2024-10-15":"V","2024-10-16":"V","2024-10-17":"夜","2024-10-18":"夜","2024-10-19":"特","2024-10-20":"夜","2024-10-21":"夜","2024-10-22":"V","2024-10-23":"中","2024-10-24":"中","2024-10-25":"中","2024-10-26":"中","2024-10-27":"中","2024-10-28":"V","2024-10-29":"V","2024-10-30":"早","2024-10-31":"早","2024-11-01":"早","2024-11-02":"早","2024-11-03":"早","2024-11-04":"V","2024-11-05":"V","2024-11-06":"夜","2024-11-07":"夜","2024-11-08":"夜","2024-11-09":"V","2024-11-10":"V","2024-11-11":"V","2024-11-12":"V","2024-11-13":"中","2024-11-14":"中","2024-11-15":"中","2024-11-16":"中","2024-11-17":"V","2024-11-18":"V","2024-11-19":"早","2024-11-20":"早","2024-11-21":"早","2024-11-22":"早","2024-11-23":"早","2024-11-24":"V","2024-11-25":"V","2024-11-26":"夜","2024-11-27":"夜","2024-11-28":"夜","2024-11-29":"夜","2024-11-30":"夜","2024-12-01":"V","2024-12-02":"中","2024-12-03":"中","2024-12-04":"中","2024-12-05":"中","2024-12-06":"中","2024-12-07":"V","2024-12-08":"V","2024-12-09":"早","2024-12-10":"早","2024-12-11":"早","2024-12-12":"早","2024-12-13":"早","2024-12-14":"V","2024-12-15":"V","2024-12-16":"夜","2024-12-17":"夜","2024-12-18":"V","2024-12-19":"夜","2024-12-20":"夜","2024-12-21":"V","2024-12-22":"V","2024-12-23":"V","2024-12-24":"中","2024-12-25":"中","2024-12-26":"中","2024-12-27":"V","2024-12-28":"V","2024-12-29":"早","2024-12-30":"早","2024-12-31":"早","2025-01-01":"早","2025-01-02":"早","2025-01-03":"V","2025-01-04":"V","2025-01-05":"夜","2025-01-06":"夜","2025-01-07":"夜","2025-01-08":"夜","2025-01-09":"夜","2025-01-10":"V","2025-01-11":"中","2025-01-12":"中","2025-01-13":"中","2025-01-14":"中","2025-01-15":"V","2025-01-16":"V","2025-01-17":"V","2025-01-18":"早","2025-01-19":"早","2025-01-20":"早","2025-01-21":"早","2025-01-22":"早","2025-01-23":"V","2025-01-24":"V","2025-01-25":"夜","2025-01-26":"夜","2025-01-27":"夜","2025-01-28":"V","2025-01-29":"V","2025-01-30":"V","2025-01-31":"V","2025-02-01":"V","2025-02-02":"中","2025-02-03":"中","2025-02-04":"中","2025-02-05":"V","2025-02-06":"V","2025-02-07":"早","2025-02-08":"早","2025-02-09":"早","2025-02-10":"婚","2025-02-11":"婚","2025-02-12":"V","2025-02-13":"V","2025-02-14":"婚","2025-02-15":"婚","2025-02-16":"婚","2025-02-17":"夜","2025-02-18":"夜","2025-02-19":"V","2025-02-20":"中","2025-02-21":"中","2025-02-22":"中","2025-02-23":"V","2025-02-24":"中","2025-02-25":"V","2025-02-26":"V","2025-02-27":"早","2025-02-28":"早","2025-03-01":"早","2025-03-02":"早","2025-03-03":"早","2025-03-04":"V","2025-03-05":"V","2025-03-06":"夜","2025-03-07":"夜","2025-03-08":"夜","2025-03-09":"夜","2025-03-10":"夜","2025-03-11":"V","2025-03-12":"中","2025-03-13":"中","2025-03-14":"中","2025-03-15":"中","2025-03-16":"中","2025-03-17":"V","2025-03-18":"V","2025-03-19":"早","2025-03-20":"早","2025-03-21":"早","2025-03-22":"早","2025-03-23":"早","2025-03-24":"V","2025-03-25":"V","2025-03-26":"V","2025-03-27":"V","2025-03-28":"夜","2025-03-29":"夜","2025-03-30":"夜","2025-03-31":"V","2025-04-01":"中","2025-04-02":"中","2025-04-03":"中","2025-04-04":"V","2025-04-05":"中","2025-04-06":"V","2025-04-07":"V","2025-04-08":"早","2025-04-09":"早","2025-04-10":"早","2025-04-11":"早","2025-04-12":"早","2025-04-13":"V","2025-04-14":"V","2025-04-15":"夜","2025-04-16":"夜","2025-04-17":"夜","2025-04-18":"夜","2025-04-19":"夜","2025-04-20":"V","2025-04-21":"喪","2025-04-22":"中","2025-04-23":"中","2025-04-24":"中","2025-04-25":"中","2025-04-26":"V","2025-04-27":"V","2025-04-28":"早","2025-04-29":"早","2025-04-30":"早","2025-05-01":"早","2025-05-02":"早","2025-05-03":"V","2025-05-04":"V","2025-05-05":"夜","2025-05-06":"夜","2025-05-07":"夜","2025-05-08":"夜","2025-05-09":"夜","2025-05-10":"V","2025-05-11":"中","2025-05-12":"中","2025-05-13":"V","2025-05-14":"中","2025-05-15":"中","2025-05-16":"V","2025-05-17":"V","2025-05-18":"早","2025-05-19":"早","2025-05-20":"早","2025-05-21":"早","2025-05-22":"早","2025-05-23":"V","2025-05-24":"V","2025-05-25":"夜","2025-05-26":"夜","2025-05-27":"夜","2025-05-28":"夜","2025-05-29":"夜","2025-05-30":"V","2025-05-31":"V","2025-06-01":"中","2025-06-02":"中","2025-06-03":"中","2025-06-04":"中","2025-06-05":"V","2025-06-06":"V","2025-06-07":"早","2025-06-08":"早","2025-06-09":"早","2025-06-10":"早","2025-06-11":"早","2025-06-12":"V","2025-06-13":"V","2025-06-14":"夜","2025-06-15":"夜","2025-06-16":"夜","2025-06-17":"夜","2025-06-18":"夜","2025-06-19":"V","2025-06-20":"中","2025-06-21":"中","2025-06-22":"中","2025-06-23":"中","2025-06-24":"中","2025-06-25":"V","2025-06-26":"V","2025-06-27":"早","2025-06-28":"早","2025-06-29":"早","2025-06-30":"早","2025-07-01":"早","2025-07-02":"V","2025-07-03":"V","2025-07-04":"喪","2025-07-05":"V","2025-07-06":"夜","2025-07-07":"夜","2025-07-08":"夜","2025-07-09":"V","2025-07-10":"中","2025-07-11":"中","2025-07-12":"中","2025-07-13":"中","2025-07-14":"V","2025-07-15":"V","2025-07-16":"V","2025-07-17":"早","2025-07-18":"早","2025-07-19":"早","2025-07-20":"早","2025-07-21":"早","2025-07-22":"V","2025-07-23":"V","2025-07-24":"夜","2025-07-25":"夜","2025-07-26":"夜","2025-07-27":"夜","2025-07-28":"夜","2025-07-29":"V","2025-07-30":"中","2025-07-31":"中","2025-08-01":"中","2025-08-02":"中","2025-08-03":"中","2025-08-04":"V","2025-08-05":"V","2025-08-06":"早","2025-08-07":"早","2025-08-08":"早","2025-08-09":"早","2025-08-10":"早","2025-08-11":"V","2025-08-12":"V","2025-08-13":"夜","2025-08-14":"夜","2025-08-15":"夜","2025-08-16":"夜","2025-08-17":"夜","2025-08-18":"V","2025-08-19":"中","2025-08-20":"中","2025-08-21":"中","2025-08-22":"中","2025-08-23":"中","2025-08-24":"V","2025-08-25":"V","2025-08-26":"早","2025-08-27":"早","2025-08-28":"早","2025-08-29":"早","2025-08-30":"早","2025-08-31":"V","2025-09-01":"V","2025-09-02":"V","2025-09-03":"特","2025-09-04":"夜","2025-09-05":"夜","2025-09-06":"夜","2025-09-07":"V","2025-09-08":"中","2025-09-09":"中","2025-09-10":"中","2025-09-11":"中","2025-09-12":"特","2025-09-13":"V","2025-09-14":"V","2025-09-15":"早","2025-09-16":"早","2025-09-17":"早","2025-09-18":"早","2025-09-19":"早","2025-09-20":"V","2025-09-21":"V","2025-09-22":"夜","2025-09-23":"夜","2025-09-24":"婚","2025-09-25":"婚","2025-09-26":"婚","2025-09-27":"V","2025-09-28":"中","2025-09-29":"中","2025-09-30":"中","2025-10-01":"中","2025-10-02":"中","2025-10-03":"V","2025-10-04":"V","2025-10-05":"V","2025-10-06":"V","2025-10-07":"早","2025-10-08":"早","2025-10-09":"早","2025-10-10":"V","2025-10-11":"V","2025-10-12":"夜","2025-10-13":"夜","2025-10-14":"夜","2025-10-15":"夜","2025-10-16":"夜","2025-10-17":"V","2025-10-18":"中","2025-10-19":"中","2025-10-20":"中","2025-10-21":"中","2025-10-22":"中","2025-10-23":"V","2025-10-24":"V","2025-10-25":"早","2025-10-26":"特","2025-10-27":"早","2025-10-28":"早","2025-10-29":"早","2025-10-30":"V","2025-10-31":"V","2025-11-01":"夜","2025-11-02":"夜","2025-11-03":"夜","2025-11-04":"夜","2025-11-05":"夜","2025-11-06":"V","2025-11-07":"中","2025-11-08":"中","2025-11-09":"中","2025-11-10":"中","2025-11-11":"中","2025-11-12":"V","2025-11-13":"V","2025-11-14":"早","2025-11-15":"早","2025-11-16":"早","2025-11-17":"早","2025-11-18":"早","2025-11-19":"V","2025-11-20":"V","2025-11-21":"夜","2025-11-22":"夜","2025-11-23":"夜","2025-11-24":"夜","2025-11-25":"夜","2025-11-26":"V","2025-11-27":"中","2025-11-28":"中","2025-11-29":"中","2025-11-30":"中","2025-12-01":"中","2025-12-02":"V","2025-12-03":"V","2025-12-04":"早","2025-12-05":"早","2025-12-06":"V","2025-12-07":"V","2025-12-08":"早","2025-12-09":"V","2025-12-10":"V","2025-12-11":"夜","2025-12-12":"夜","2025-12-13":"夜","2025-12-14":"夜","2025-12-15":"夜","2025-12-16":"V","2025-12-17":"中","2025-12-18":"中","2025-12-19":"中","2025-12-20":"中"},"b":{"2026-01-01":"早","2026-01-02":"中","2026-01-03":"中","2026-01-04":"中","2026-01-05":"中","2026-01-06":"V","2026-01-07":"訓","2026-01-08":"訓","2026-01-09":"中","2026-01-10":"V","2026-01-11":"V","2026-01-12":"V","2026-01-13":"V","2026-01-14":"早","2026-01-15":"早","2026-01-16":"早","2026-01-17":"早","2026-01-18":"中","2026-01-19":"V","2026-01-20":"夜","2026-01-21":"夜","2026-01-22":"夜","2026-01-23":"V","2026-01-24":"早","2026-01-25":"V","2026-01-26":"中","2026-01-27":"中","2026-01-28":"中","2026-01-29":"中","2026-01-30":"V","2026-01-31":"V","2026-02-01":"V","2026-02-02":"夜","2026-02-03":"夜","2026-02-04":"V","2026-02-05":"V","2026-02-06":"V","2026-02-07":"早","2026-02-08":"早","2026-02-09":"V","2026-02-10":"夜","2026-02-11":"夜","2026-02-12":"夜","2026-02-13":"夜","2026-02-14":"V","2026-02-15":"V","2026-02-16":"V","2026-02-17":"早","2026-02-18":"V","2026-02-19":"早","2026-02-20":"早","2026-02-21":"中","2026-02-22":"中","2026-02-23":"V","2026-02-24":"特","2026-02-25":"特","2026-02-26":"特","2026-02-27":"V","2026-02-28":"V","2026-03-01":"V","2026-03-02":"日","2026-03-03":"早","2026-03-04":"早","2026-03-05":"中","2026-03-06":"中","2026-03-07":"V","2026-03-08":"夜","2026-03-09":"夜","2026-03-10":"補","2026-03-11":"補","2026-03-12":"V","2026-03-13":"V","2026-03-14":"特","2026-03-15":"早","2026-03-16":"早","2026-03-17":"早","2026-03-18":"早","2026-03-19":"V","2026-03-20":"V","2026-03-21":"夜","2026-03-22":"夜","2026-03-23":"夜","2026-03-24":"V","2026-03-25":"V","2026-03-26":"訓","2026-03-27":"中","2026-03-28":"中","2026-03-29":"中","2026-03-30":"中","2026-03-31":"FG","2026-04-01":"V","2026-04-02":"V","2026-04-03":"夜","2026-04-04":"夜","2026-04-05":"V","2026-04-06":"早","2026-04-07":"早","2026-04-08":"V","2026-04-09":"V","2026-04-10":"中","2026-04-11":"中","2026-04-12":"V","2026-04-13":"夜","2026-04-14":"夜","2026-04-15":"V","2026-04-16":"V","2026-04-17":"日","2026-04-18":"早","2026-04-19":"早","2026-04-20":"V","2026-04-21":"V","2026-04-22":"中","2026-04-23":"中","2026-04-24":"V","2026-04-25":"夜","2026-04-26":"夜","2026-04-27":"特","2026-04-28":"V","2026-04-29":"V","2026-04-30":"早","2026-05-01":"早","2026-05-02":"中","2026-05-03":"中","2026-05-04":"中","2026-05-05":"中","2026-05-06":"V","2026-05-07":"夜","2026-05-08":"日","2026-05-09":"中","2026-05-10":"中","2026-05-11":"中","2026-05-12":"V","2026-05-13":"特","2026-05-14":"早","2026-05-15":"早","2026-05-16":"V","2026-05-17":"V","2026-05-18":"V","2026-05-19":"V","2026-05-20":"夜","2026-05-21":"夜","2026-05-22":"夜","2026-05-23":"V","2026-05-24":"早","2026-05-25":"V","2026-05-26":"中","2026-05-27":"中","2026-05-28":"中","2026-05-29":"中","2026-05-30":"中","2026-05-31":"V","2026-06-01":"V","2026-06-02":"特","2026-06-03":"早","2026-06-04":"早","2026-06-05":"早","2026-06-06":"早","2026-06-07":"V","2026-06-08":"V","2026-06-09":"日","2026-06-10":"日","2026-06-11":"日","2026-06-12":"日","2026-06-13":"V","2026-06-14":"V","2026-06-15":"日","2026-06-16":"日","2026-06-17":"日","2026-06-18":"日","2026-06-19":"V","2026-06-20":"V","2026-06-21":"V","2026-06-22":"特","2026-06-23":"特","2026-06-24":"特","2026-06-25":"特","2026-06-26":"特","2026-06-27":"V","2026-06-28":"V","2026-06-29":"特","2026-06-30":"特","2026-07-01":"特","2026-07-02":"特","2026-07-03":"日","2026-07-04":"V","2026-07-05":"V","2026-07-06":"","2026-07-07":"","2026-07-08":"","2026-07-09":"","2026-07-10":"","2026-07-11":"","2026-07-12":"","2026-07-13":"","2026-07-14":"","2026-07-15":"","2026-07-16":"","2026-07-17":"","2026-07-18":"","2026-07-19":"","2026-07-20":"","2026-07-21":"","2026-07-22":"","2026-07-23":"","2026-07-24":"","2026-07-25":"","2026-07-26":"","2026-07-27":"","2026-07-28":"","2026-07-29":"","2026-07-30":"","2026-07-31":"","2026-08-01":"","2026-08-02":"","2026-08-03":"","2026-08-04":"","2026-08-05":"","2026-08-06":"","2026-08-07":"","2026-08-08":"V","2026-08-09":"V","2026-08-10":"","2026-08-11":"","2026-08-12":"","2026-08-13":"","2026-08-14":"","2026-08-15":"V","2026-08-16":"V","2026-08-17":"","2026-08-18":"","2026-08-19":"","2026-08-20":"","2026-08-21":"","2026-08-22":"V","2026-08-23":"V","2026-08-24":"","2026-08-25":"","2026-08-26":"","2026-08-27":"","2026-08-28":"","2026-08-29":"V","2026-08-30":"V","2026-08-31":"","2026-09-01":"訓","2026-09-02":"訓","2026-09-03":"訓","2026-09-04":"","2026-09-05":"V","2026-09-06":"V","2026-09-07":"","2026-09-08":"","2026-09-09":"","2026-09-10":"","2026-09-11":"","2026-09-12":"V","2026-09-13":"V","2026-09-14":"","2026-09-15":"","2026-09-16":"","2026-09-17":"","2026-09-18":"","2026-09-19":"V","2026-09-20":"V","2026-09-21":"","2026-09-22":"","2026-09-23":"","2026-09-24":"","2026-09-25":"V","2026-09-26":"V","2026-09-27":"V","2026-09-28":"V","2026-09-29":"","2026-09-30":"","2026-10-01":"","2026-10-02":"","2026-10-03":"V","2026-10-04":"V","2026-10-05":"","2026-10-06":"","2026-10-07":"","2026-10-08":"","2026-10-09":"V","2026-10-10":"V","2026-10-11":"V","2026-10-12":"","2026-10-13":"","2026-10-14":"","2026-10-15":"","2026-10-16":"","2026-10-17":"V","2026-10-18":"V","2026-10-19":"","2026-10-20":"","2026-10-21":"","2026-10-22":"","2026-10-23":"","2026-10-24":"V","2026-10-25":"V","2026-10-26":"V","2026-10-27":"","2026-10-28":"","2026-10-29":"","2026-10-30":"","2026-10-31":"V","2026-11-01":"V","2026-11-02":"","2026-11-03":"","2026-11-04":"","2026-11-05":"","2026-11-06":"","2026-11-07":"V","2026-11-08":"V","2026-11-09":"","2026-11-10":"","2026-11-11":"","2026-11-12":"","2026-11-13":"","2026-11-14":"V","2026-11-15":"V","2026-11-16":"","2026-11-17":"","2026-11-18":"","2026-11-19":"","2026-11-20":"","2026-11-21":"V","2026-11-22":"V","2026-11-23":"","2026-11-24":"","2026-11-25":"","2026-11-26":"","2026-11-27":"","2026-11-28":"V","2026-11-29":"V","2026-11-30":"","2026-12-01":"","2026-12-02":"","2026-12-03":"","2026-12-04":"","2026-12-05":"V","2026-12-06":"V","2026-12-07":"","2026-12-08":"","2026-12-09":"","2026-12-10":"","2026-12-11":"","2026-12-12":"V","2026-12-13":"V","2026-12-14":"","2026-12-15":"","2026-12-16":"","2026-12-17":"","2026-12-18":"","2026-12-19":"V","2026-12-20":"V","2023-12-21":"中","2023-12-22":"中","2023-12-23":"V","2023-12-24":"中","2023-12-25":"中","2023-12-26":"中","2023-12-27":"中","2023-12-28":"V","2023-12-29":"V","2023-12-30":"早","2023-12-31":"早","2024-01-01":"早","2024-01-02":"早","2024-01-03":"中","2024-01-04":"中","2024-01-05":"V","2024-01-06":"夜","2024-01-07":"夜","2024-01-08":"V","2024-01-09":"V","2024-01-10":"V","2024-01-11":"V","2024-01-12":"V","2024-01-13":"中","2024-01-14":"中","2024-01-15":"中","2024-01-16":"中","2024-01-17":"V","2024-01-18":"夜","2024-01-19":"夜","2024-01-20":"夜","2024-01-21":"夜","2024-01-22":"V","2024-01-23":"日","2024-01-24":"日","2024-01-25":"中","2024-01-26":"中","2024-01-27":"中","2024-01-28":"中","2024-01-29":"V","2024-01-30":"V","2024-01-31":"夜","2024-02-01":"夜","2024-02-02":"夜","2024-02-03":"V","2024-02-04":"V","2024-02-05":"補","2024-02-06":"中","2024-02-07":"中","2024-02-08":"中","2024-02-09":"V","2024-02-10":"V","2024-02-11":"V","2024-02-12":"V","2024-02-13":"V","2024-02-14":"V","2024-02-15":"V","2024-02-16":"日","2024-02-17":"V","2024-02-18":"早","2024-02-19":"早","2024-02-20":"中","2024-02-21":"中","2024-02-22":"V","2024-02-23":"夜","2024-02-24":"夜","2024-02-25":"V","2024-02-26":"特","2024-02-27":"V","2024-02-28":"早","2024-02-29":"早","2024-03-01":"中","2024-03-02":"中","2024-03-03":"中","2024-03-04":"中","2024-03-05":"V","2024-03-06":"夜","2024-03-07":"夜","2024-03-08":"V","2024-03-09":"V","2024-03-10":"V","2024-03-11":"日","2024-03-12":"日","2024-03-13":"早","2024-03-14":"早","2024-03-15":"V","2024-03-16":"中","2024-03-17":"中","2024-03-18":"中","2024-03-19":"V","2024-03-20":"夜","2024-03-21":"夜","2024-03-22":"V","2024-03-23":"V","2024-03-24":"早","2024-03-25":"早","2024-03-26":"早","2024-03-27":"中","2024-03-28":"中","2024-03-29":"V","2024-03-30":"中","2024-03-31":"V","2024-04-01":"夜","2024-04-02":"夜","2024-04-03":"V","2024-04-04":"早","2024-04-05":"早","2024-04-06":"中","2024-04-07":"中","2024-04-08":"中","2024-04-09":"中","2024-04-10":"V","2024-04-11":"V","2024-04-12":"V","2024-04-13":"夜","2024-04-14":"夜","2024-04-15":"V","2024-04-16":"特","2024-04-17":"日","2024-04-18":"V","2024-04-19":"V","2024-04-20":"中","2024-04-21":"中","2024-04-22":"V","2024-04-23":"夜","2024-04-24":"夜","2024-04-25":"V","2024-04-26":"日","2024-04-27":"V","2024-04-28":"V","2024-04-29":"日","2024-04-30":"早","2024-05-01":"早","2024-05-02":"中","2024-05-03":"中","2024-05-04":"V","2024-05-05":"夜","2024-05-06":"夜","2024-05-07":"日","2024-05-08":"V","2024-05-09":"V","2024-05-10":"早","2024-05-11":"V","2024-05-12":"中","2024-05-13":"中","2024-05-14":"中","2024-05-15":"V","2024-05-16":"夜","2024-05-17":"夜","2024-05-18":"夜","2024-05-19":"夜","2024-05-20":"V","2024-05-21":"V","2024-05-22":"V","2024-05-23":"補","2024-05-24":"中","2024-05-25":"中","2024-05-26":"中","2024-05-27":"中","2024-05-28":"V","2024-05-29":"V","2024-05-30":"夜","2024-05-31":"夜","2024-06-01":"V","2024-06-02":"V","2024-06-03":"早","2024-06-04":"特","2024-06-05":"中","2024-06-06":"中","2024-06-07":"中","2024-06-08":"中","2024-06-09":"V","2024-06-10":"夜","2024-06-11":"夜","2024-06-12":"V","2024-06-13":"日","2024-06-14":"日","2024-06-15":"早","2024-06-16":"早","2024-06-17":"早","2024-06-18":"早","2024-06-19":"V","2024-06-20":"夜","2024-06-21":"夜","2024-06-22":"夜","2024-06-23":"夜","2024-06-24":"V","2024-06-25":"特","2024-06-26":"V","2024-06-27":"早","2024-06-28":"日","2024-06-29":"中","2024-06-30":"中","2024-07-01":"中","2024-07-02":"中","2024-07-03":"V","2024-07-04":"夜","2024-07-05":"夜","2024-07-06":"V","2024-07-07":"V","2024-07-08":"V","2024-07-09":"日","2024-07-10":"日","2024-07-11":"日","2024-07-12":"中","2024-07-13":"中","2024-07-14":"中","2024-07-15":"V","2024-07-16":"夜","2024-07-17":"夜","2024-07-18":"V","2024-07-19":"日","2024-07-20":"V","2024-07-21":"V","2024-07-22":"補","2024-07-23":"中","2024-07-24":"中","2024-07-25":"中","2024-07-26":"V","2024-07-27":"V","2024-07-28":"V","2024-07-29":"夜","2024-07-30":"夜","2024-07-31":"夜","2024-08-01":"日","2024-08-02":"日","2024-08-03":"V","2024-08-04":"早","2024-08-05":"中","2024-08-06":"中","2024-08-07":"中","2024-08-08":"中","2024-08-09":"V","2024-08-10":"V","2024-08-11":"夜","2024-08-12":"夜","2024-08-13":"V","2024-08-14":"補","2024-08-15":"補","2024-08-16":"中","2024-08-17":"中","2024-08-18":"中","2024-08-19":"中","2024-08-20":"V","2024-08-21":"夜","2024-08-22":"夜","2024-08-23":"特","2024-08-24":"V","2024-08-25":"V","2024-08-26":"補","2024-08-27":"V","2024-08-28":"早","2024-08-29":"早","2024-08-30":"中","2024-08-31":"中","2024-09-01":"中","2024-09-02":"中","2024-09-03":"V","2024-09-04":"夜","2024-09-05":"夜","2024-09-06":"V","2024-09-07":"早","2024-09-08":"早","2024-09-09":"早","2024-09-10":"早","2024-09-11":"中","2024-09-12":"中","2024-09-13":"V","2024-09-14":"V","2024-09-15":"夜","2024-09-16":"夜","2024-09-17":"夜","2024-09-18":"V","2024-09-19":"V","2024-09-20":"補","2024-09-21":"中","2024-09-22":"中","2024-09-23":"中","2024-09-24":"中","2024-09-25":"V","2024-09-26":"V","2024-09-27":"夜","2024-09-28":"夜","2024-09-29":"夜","2024-09-30":"V","2024-10-01":"中","2024-10-02":"中","2024-10-03":"中","2024-10-04":"中","2024-10-05":"中","2024-10-06":"中","2024-10-07":"V","2024-10-08":"V","2024-10-09":"夜","2024-10-10":"夜","2024-10-11":"V","2024-10-12":"V","2024-10-13":"早","2024-10-14":"V","2024-10-15":"V","2024-10-16":"V","2024-10-17":"中","2024-10-18":"中","2024-10-19":"V","2024-10-20":"夜","2024-10-21":"夜","2024-10-22":"V","2024-10-23":"日","2024-10-24":"日","2024-10-25":"日","2024-10-26":"V","2024-10-27":"中","2024-10-28":"中","2024-10-29":"中","2024-10-30":"中","2024-10-31":"V","2024-11-01":"夜","2024-11-02":"夜","2024-11-03":"夜","2024-11-04":"V","2024-11-05":"V","2024-11-06":"日","2024-11-07":"日","2024-11-08":"早","2024-11-09":"早","2024-11-10":"特","2024-11-11":"V","2024-11-12":"V","2024-11-13":"夜","2024-11-14":"夜","2024-11-15":"夜","2024-11-16":"夜","2024-11-17":"V","2024-11-18":"特","2024-11-19":"補","2024-11-20":"早","2024-11-21":"早","2024-11-22":"中","2024-11-23":"中","2024-11-24":"V","2024-11-25":"V","2024-11-26":"夜","2024-11-27":"夜","2024-11-28":"夜","2024-11-29":"夜","2024-11-30":"夜","2024-12-01":"V","2024-12-02":"中","2024-12-03":"中","2024-12-04":"中","2024-12-05":"中","2024-12-06":"V","2024-12-07":"V","2024-12-08":"V","2024-12-09":"夜","2024-12-10":"夜","2024-12-11":"V","2024-12-12":"特","2024-12-13":"特","2024-12-14":"早","2024-12-15":"早","2024-12-16":"中","2024-12-17":"中","2024-12-18":"V","2024-12-19":"夜","2024-12-20":"夜","2024-12-21":"V","2024-12-22":"V","2024-12-23":"V","2024-12-24":"補","2024-12-25":"補","2024-12-26":"中","2024-12-27":"中","2024-12-28":"中","2024-12-29":"中","2024-12-30":"V","2024-12-31":"夜","2025-01-01":"夜","2025-01-02":"V","2025-01-03":"V","2025-01-04":"V","2025-01-05":"早","2025-01-06":"早","2025-01-07":"早","2025-01-08":"早","2025-01-09":"中","2025-01-10":"中","2025-01-11":"V","2025-01-12":"V","2025-01-13":"夜","2025-01-14":"夜","2025-01-15":"夜","2025-01-16":"V","2025-01-17":"V","2025-01-18":"早","2025-01-19":"早","2025-01-20":"早","2025-01-21":"早","2025-01-22":"早","2025-01-23":"V","2025-01-24":"V","2025-01-25":"夜","2025-01-26":"夜","2025-01-27":"夜","2025-01-28":"V","2025-01-29":"V","2025-01-30":"V","2025-01-31":"早","2025-02-01":"中","2025-02-02":"中","2025-02-03":"中","2025-02-04":"中","2025-02-05":"V","2025-02-06":"夜","2025-02-07":"夜","2025-02-08":"V","2025-02-09":"V","2025-02-10":"婚","2025-02-11":"婚","2025-02-12":"婚","2025-02-13":"婚","2025-02-14":"婚","2025-02-15":"V","2025-02-16":"V","2025-02-17":"夜","2025-02-18":"夜","2025-02-19":"V","2025-02-20":"V","2025-02-21":"日","2025-02-22":"中","2025-02-23":"特","2025-02-24":"中","2025-02-25":"V","2025-02-26":"V","2025-02-27":"夜","2025-02-28":"夜","2025-03-01":"夜","2025-03-02":"夜","2025-03-03":"V","2025-03-04":"日","2025-03-05":"訓","2025-03-06":"V","2025-03-07":"日","2025-03-08":"中","2025-03-09":"中","2025-03-10":"中","2025-03-11":"V","2025-03-12":"V","2025-03-13":"V","2025-03-14":"夜","2025-03-15":"夜","2025-03-16":"夜","2025-03-17":"V","2025-03-18":"V","2025-03-19":"早","2025-03-20":"早","2025-03-21":"早","2025-03-22":"早","2025-03-23":"早","2025-03-24":"V","2025-03-25":"訓","2025-03-26":"訓","2025-03-27":"訓","2025-03-28":"V","2025-03-29":"夜","2025-03-30":"夜","2025-03-31":"V","2025-04-01":"中","2025-04-02":"中","2025-04-03":"中","2025-04-04":"中","2025-04-05":"中","2025-04-06":"V","2025-04-07":"V","2025-04-08":"V","2025-04-09":"V","2025-04-10":"V","2025-04-11":"早","2025-04-12":"早","2025-04-13":"V","2025-04-14":"V","2025-04-15":"中","2025-04-16":"中","2025-04-17":"V","2025-04-18":"夜","2025-04-19":"喪","2025-04-20":"V","2025-04-21":"喪","2025-04-22":"日","2025-04-23":"早","2025-04-24":"V","2025-04-25":"訓","2025-04-26":"中","2025-04-27":"中","2025-04-28":"中","2025-04-29":"V","2025-04-30":"夜","2025-05-01":"夜","2025-05-02":"V","2025-05-03":"V","2025-05-04":"V","2025-05-05":"日","2025-05-06":"日","2025-05-07":"早","2025-05-08":"早","2025-05-09":"中","2025-05-10":"中","2025-05-11":"V","2025-05-12":"夜","2025-05-13":"夜","2025-05-14":"V","2025-05-15":"日","2025-05-16":"V","2025-05-17":"V","2025-05-18":"早","2025-05-19":"早","2025-05-20":"早","2025-05-21":"中","2025-05-22":"中","2025-05-23":"V","2025-05-24":"喪","2025-05-25":"V","2025-05-26":"夜","2025-05-27":"夜","2025-05-28":"夜","2025-05-29":"夜","2025-05-30":"V","2025-05-31":"中","2025-06-01":"中","2025-06-02":"中","2025-06-03":"中","2025-06-04":"V","2025-06-05":"夜","2025-06-06":"V","2025-06-07":"早","2025-06-08":"早","2025-06-09":"早","2025-06-10":"早","2025-06-11":"早","2025-06-12":"V","2025-06-13":"V","2025-06-14":"中","2025-06-15":"中","2025-06-16":"V","2025-06-17":"夜","2025-06-18":"夜","2025-06-19":"V","2025-06-20":"日","2025-06-21":"中","2025-06-22":"中","2025-06-23":"中","2025-06-24":"中","2025-06-25":"V","2025-06-26":"中","2025-06-27":"中","2025-06-28":"V","2025-06-29":"早","2025-06-30":"早","2025-07-01":"早","2025-07-02":"喪","2025-07-03":"喪","2025-07-04":"換","2025-07-05":"V","2025-07-06":"早","2025-07-07":"中","2025-07-08":"中","2025-07-09":"中","2025-07-10":"V","2025-07-11":"夜","2025-07-12":"V","2025-07-13":"V","2025-07-14":"V","2025-07-15":"V","2025-07-16":"V","2025-07-17":"V","2025-07-18":"中","2025-07-19":"中","2025-07-20":"中","2025-07-21":"中","2025-07-22":"V","2025-07-23":"換","2025-07-24":"V","2025-07-25":"夜","2025-07-26":"夜","2025-07-27":"夜","2025-07-28":"夜","2025-07-29":"V","2025-07-30":"中","2025-07-31":"中","2025-08-01":"中","2025-08-02":"中","2025-08-03":"中","2025-08-04":"V","2025-08-05":"V","2025-08-06":"V","2025-08-07":"補","2025-08-08":"補","2025-08-09":"早","2025-08-10":"早","2025-08-11":"中","2025-08-12":"中","2025-08-13":"V","2025-08-14":"夜","2025-08-15":"夜","2025-08-16":"夜","2025-08-17":"夜","2025-08-18":"V","2025-08-19":"日","2025-08-20":"日","2025-08-21":"日","2025-08-22":"V","2025-08-23":"中","2025-08-24":"中","2025-08-25":"中","2025-08-26":"中","2025-08-27":"V","2025-08-28":"夜","2025-08-29":"夜","2025-08-30":"早","2025-08-31":"V","2025-09-01":"V","2025-09-02":"特","2025-09-03":"日","2025-09-04":"中","2025-09-05":"中","2025-09-06":"中","2025-09-07":"中","2025-09-08":"V","2025-09-09":"夜","2025-09-10":"訓","2025-09-11":"特","2025-09-12":"V","2025-09-13":"V","2025-09-14":"V","2025-09-15":"早","2025-09-16":"早","2025-09-17":"早","2025-09-18":"早","2025-09-19":"早","2025-09-20":"V","2025-09-21":"V","2025-09-22":"夜","2025-09-23":"夜","2025-09-24":"婚","2025-09-25":"婚","2025-09-26":"婚","2025-09-27":"V","2025-09-28":"中","2025-09-29":"中","2025-09-30":"中","2025-10-01":"中","2025-10-02":"V","2025-10-03":"V","2025-10-04":"V","2025-10-05":"V","2025-10-06":"夜","2025-10-07":"日","2025-10-08":"V","2025-10-09":"V","2025-10-10":"中","2025-10-11":"中","2025-10-12":"中","2025-10-13":"中","2025-10-14":"V","2025-10-15":"夜","2025-10-16":"夜","2025-10-17":"V","2025-10-18":"V","2025-10-19":"V","2025-10-20":"日","2025-10-21":"補","2025-10-22":"中","2025-10-23":"中","2025-10-24":"中","2025-10-25":"中","2025-10-26":"V","2025-10-27":"夜","2025-10-28":"夜","2025-10-29":"夜","2025-10-30":"V","2025-10-31":"V","2025-11-01":"V","2025-11-02":"夜","2025-11-03":"夜","2025-11-04":"V","2025-11-05":"中","2025-11-06":"中","2025-11-07":"V","2025-11-08":"夜","2025-11-09":"夜","2025-11-10":"特","2025-11-11":"日","2025-11-12":"V","2025-11-13":"V","2025-11-14":"早","2025-11-15":"早","2025-11-16":"早","2025-11-17":"早","2025-11-18":"早","2025-11-19":"V","2025-11-20":"夜","2025-11-21":"夜","2025-11-22":"夜","2025-11-23":"夜","2025-11-24":"V","2025-11-25":"V","2025-11-26":"特","2025-11-27":"中","2025-11-28":"中","2025-11-29":"中","2025-11-30":"中","2025-12-01":"V","2025-12-02":"夜","2025-12-03":"夜","2025-12-04":"補","2025-12-05":"補","2025-12-06":"V","2025-12-07":"V","2025-12-08":"早","2025-12-09":"早","2025-12-10":"早","2025-12-11":"中","2025-12-12":"中","2025-12-13":"V","2025-12-14":"夜","2025-12-15":"夜","2025-12-16":"V","2025-12-17":"V","2025-12-18":"V","2025-12-19":"早","2025-12-20":"早"},"notes":{"2026-01-01":"元旦","2026-01-07":"麥寮","2026-01-08":"麥寮","2026-01-13":"土地","2026-01-30":"長榮","2026-02-01":"開會","2026-02-16":"除夕","2026-02-17":"初一","2026-02-18":"初二","2026-02-19":"初三","2026-02-20":"補假","2026-02-27":"補假","2026-02-28":"228","2026-03-04":"退費","2026-03-14":"考試","2026-03-25":"五鮮","2026-03-26":"新港","2026-04-01":"熱炒","2026-04-03":"補假","2026-04-04":"兒童","2026-04-05":"清明","2026-04-06":"補假","2026-04-14":"放榜","2026-04-17":"上體檢","2026-04-28":"母親節","2026-05-01":"勞動","2026-05-10":"母親節","2026-05-16":"面試","2026-05-17":"面試","2026-05-30":"唐山祖","2026-06-19":"端午","2026-09-01":"高雄","2026-09-02":"高雄","2026-09-03":"高雄","2026-09-06":"王品","2026-09-25":"中秋","2026-09-28":"教師","2026-10-03":"烤肉","2026-10-09":"補假","2026-10-10":"雙十","2026-10-25":"光復","2026-10-26":"補假","2026-11-10":"結婚","2026-12-17":"婦回診","2024-01-01":"元旦","2024-02-08":"補假","2024-02-09":"除夕","2024-02-10":"初一","2024-02-11":"初二","2024-02-12":"初三","2024-02-13":"初四","2024-02-14":"初五","2024-02-17":"補班","2024-02-28":"228","2024-03-01":"法院","2024-03-15":"對年","2024-03-31":"掃墓","2024-04-03":"冰箱","2024-04-04":"清明","2024-04-05":"兒童","2024-04-15":"檢查","2024-04-16":"窗.冷","2024-04-18":"報告","2024-04-22":"電爐","2024-04-25":"燈.水","2024-05-01":"勞動","2024-05-12":"蛋糕","2024-05-20":"窗簾","2024-06-10":"端午","2024-06-19":"筑生","2024-06-20":"腸胃","2024-06-25":"網路","2024-07-13":"辦桌","2024-08-08":"回診","2024-08-24":"劍湖山","2024-09-13":"鳳梨酥","2024-09-17":"中秋","2024-10-10":"雙十","2024-10-18":"回診","2024-11-04":"登記","2024-11-10":"家宴","2024-11-14":"拜天公","2024-11-28":"回診","2024-12-17":"斷大電","2024-12-18":"斷大電","2025-01-01":"元旦","2025-01-10":"回診","2025-01-16":"保尾牙","2025-01-27":"彈假","2025-01-28":"除夕","2025-01-29":"初一","2025-01-30":"初二","2025-01-31":"初三","2025-02-01":"初四","2025-02-02":"初五","2025-02-08":"補班","2025-02-19":"祥生","2025-02-28":"228","2025-03-05":"麥寮","2025-03-09":"公拜拜","2025-03-25":"麥寮","2025-03-26":"麥寮","2025-03-27":"麥寮","2025-04-03":"補假","2025-04-04":"清明","2025-04-05":"兒童","2025-04-19":"阿嬤","2025-04-20":"阿嬤","2025-04-25":"上課","2025-05-01":"勞動","2025-05-03":"茶六","2025-05-10":"蛋糕","2025-05-19":"乾媽","2025-05-30":"補假","2025-05-31":"端午","2025-06-12":"大乖","2025-06-19":"筑生","2025-07-04":"台南","2025-07-05":"台南","2025-07-12":"百日","2025-08-31":"烤雞","2025-09-10":"麥寮","2025-09-11":"鳳梨酥","2025-09-13":"風間","2025-09-18":"牙科","2025-09-19":"回診","2025-09-28":"孔子","2025-09-29":"補假","2025-10-04":"烤肉","2025-10-06":"中秋","2025-10-10":"雙十","2025-10-24":"補假","2025-10-25":"光復","2025-10-26":"吃重陽","2025-11-10":"結婚","2025-12-06":"露營","2025-12-07":"露營","2025-12-12":"檢查","2025-12-18":"回診"}};
+const shifts={
+ "早":{bg:"#fff0c2",fg:"#7a4c00"},"中":{bg:"#dff3ff",fg:"#075985"},"夜":{bg:"#e9e3ff",fg:"#4c1d95"},
+ "日":{bg:"#dcfce7",fg:"#166534"},"V":{bg:"#f1f1f1",fg:"#555"},"特":{bg:"#ffe0e0",fg:"#991b1b"},
+ "訓":{bg:"#e0f2fe",fg:"#075985"},"補":{bg:"#fef3c7",fg:"#92400e"},"FG":{bg:"#fde7f3",fg:"#9d174d"},
+ "":{bg:"#fff",fg:"#999"}
+};
+let state={people:{aName:"A",aIcon:"🐷",bName:"B",bIcon:"🐭"},display:{
+  periodStartDay:1,weekStart:0,
+  weekendColor:"#faf0d2",weekendDateColor:"#ff0000",
+  publicHolidayColor:"#faf0d2",publicHolidayDateColor:"#ff0000",
+  compHolidayColor:"#faf0d2",compHolidayDateColor:"#ff0000",mcColor:"#ffe4ec",todayBorderColor:"#111827",todayBorderWidth:3,mcDateColor:"#d81b60",calendarFont:"system"
+},
+logic:{
+  a:{enabled:false,startDate:"2026-12-21",sequence:["早","早","早","早","V","V","中","中","中","中","中","V","V","夜","夜","夜","夜","夜","V"]},
+  b:{enabled:false,startDate:"2026-01-01",sequence:["V","","","","","V","V"]}
+},
+shiftTypes:[
+ {code:"",label:"空白",bg:"#fff",fg:"#999"},
+ {code:"早",label:"早",bg:"#fff0c2",fg:"#7a4c00"},
+ {code:"中",label:"中",bg:"#dff3ff",fg:"#075985"},
+ {code:"夜",label:"夜",bg:"#e9e3ff",fg:"#4c1d95"},
+ {code:"日",label:"日",bg:"#dcfce7",fg:"#166534"},
+ {code:"V",label:"V",bg:"#f1f1f1",fg:"#555"},
+ {code:"特",label:"特",bg:"#ffe0e0",fg:"#991b1b"},
+ {code:"訓",label:"訓",bg:"#e0f2fe",fg:"#075985"},
+ {code:"補",label:"補",bg:"#fef3c7",fg:"#92400e"},
+ {code:"FG",label:"FG",bg:"#fde7f3",fg:"#9d174d"},{code:"婚",label:"婚假",bg:"#fde7f3",fg:"#9d174d"},{code:"喪",label:"喪假",bg:"#e5e7eb",fg:"#374151"},{code:"換",label:"換班",bg:"#e0f2fe",fg:"#075985"}
+],days:{},generated:{}};
+try{
+ const s=JSON.parse(localStorage.getItem("shiftPwaV4")||"null");
+ if(s) state={...state,...s,people:{...state.people,...(s.people||{})},display:{...state.display,...(s.display||{})},shiftTypes:Array.isArray(s.shiftTypes)&&s.shiftTypes.length?s.shiftTypes:state.shiftTypes,days:s.days||{},generated:s.generated||{}};
+}catch(e){}
+const persist=()=>localStorage.setItem("shiftPwaV4",JSON.stringify(state));
+const k=d=>d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");
+const dFromKey=x=>{const p=x.split("-").map(Number);return new Date(p[0],p[1]-1,p[2],12)};
+const parseDate=x=>{
+ if(!x||typeof x!=="string")return null;
+ const p=x.replace(/\//g,"-").split("-").map(Number);
+ if(p.length!==3||p.some(Number.isNaN))return null;
+ const d=new Date(p[0],p[1]-1,p[2],12);
+ return d.getFullYear()===p[0]&&d.getMonth()===p[1]-1&&d.getDate()===p[2]?d:null;
+};
+const addDays=(d,n)=>{const x=new Date(d);x.setDate(x.getDate()+n);return x};
+const dedupe=(arr)=>[...new Set(arr.filter(Boolean))];
+
+function fallback(d,p){
+ if(p==="b") return (d.getDay()===0||d.getDay()===6)?"V":"";
+ const cycle=["早","早","早","早","V","V","中","中","中","中","中","V","V","夜","夜","夜","夜","夜","V"];
+ const base=new Date(2026,0,1,12), diff=Math.floor((d-base)/86400000);
+ return cycle[((diff%cycle.length)+cycle.length)%cycle.length];
+}
+function baseShift(d,p){return imported[p][k(d)]!==undefined?imported[p][k(d)]:fallback(d,p)}
+function logicShift(d,p){
+ try{
+   const cfg=state.logic?.[p];
+   if(!cfg || !cfg.enabled || !cfg.startDate || !Array.isArray(cfg.sequence) || !cfg.sequence.length) return null;
+   const start=parseDate(cfg.startDate);
+   if(!start) return null;
+   const diff=Math.floor((dateOnlyTime(d)-dateOnlyTime(start))/86400000);
+   const n=cfg.sequence.length;
+   const idx=((diff%n)+n)%n;
+   return cfg.sequence[idx]??"";
+ }catch(e){
+   console.warn("班別邏輯計算失敗，改用原始班表",e);
+   return null;
+ }
+}
+function shiftFor(d,p){
+ const kk=k(d);
+ const custom=state.days?.[kk];
+ const override=p==="a"?custom?.aShift:custom?.bShift;
+ if(override!==undefined) return override;
+
+ // 原始匯入班表優先顯示
+ const base=p==="a"?imported.a?.[kk]:imported.b?.[kk];
+ if(base!==undefined) return base;
+
+ // 原始班表沒有資料的日期，才使用自訂輪班邏輯
+ try{
+   const cfg=state.logic?.[p];
+   if(cfg?.enabled && cfg.startDate){
+     const start=parseDate(cfg.startDate);
+     if(start && dateOnlyTime(d)>=dateOnlyTime(start)){
+       const ls=logicShift(d,p);
+       if(ls!==null) return ls;
+     }
+   }
+ }catch(e){
+   console.warn("套用班別邏輯失敗",e);
+ }
+ return fallback(d,p);
+}
+function baseNotes(d){
+ const kk=k(d), out=[];
+ if(imported.notes[kk]) out.push(imported.notes[kk]);
+ if(state.generated[kk]) out.push(state.generated[kk]);
+ return dedupe(out.join("、").split("、")).join("、");
+}
+
+function recurringSpecialNote(d){
+ const m=d.getMonth()+1,day=d.getDate();
+ if(m===2&&day===19)return "祥生";
+ if(m===6&&day===19)return "筑生";
+ if(d.getFullYear()>=2024&&m===11&&day===10)return "結婚";
+ return "";
+}
+function displayNote(d){
+ const kk=k(d);
+ const source=(imported.notes&&imported.notes[kk])||"";
+ const generated=(state.generated&&state.generated[kk])||"";
+ const custom=(state.days&&state.days[kk]&&state.days[kk].note)||"";
+ const special=recurringSpecialNote(d);
+ const parts=[];
+ for(const x of [source,generated,custom,special]){
+   if(x && !parts.includes(x))parts.push(x);
+ }
+ return parts.join(" · ");
+}
+
+function chineseParts(d){
+ try{
+   const fmt=new Intl.DateTimeFormat("en-u-ca-chinese",{month:"numeric",day:"numeric"});
+   const parts=fmt.formatToParts(d);
+   const m=parseInt(parts.find(p=>p.type==="month")?.value,10);
+   const day=parseInt(parts.find(p=>p.type==="day")?.value,10);
+   return {m,day};
+ }catch(e){return {m:NaN,day:NaN}}
+}
+function qingmingDay(year){
+ const y=year%100;
+ return Math.floor(y*0.2422+4.81)-Math.floor((y-1)/4);
+}
+function nthWeekday(year,month,weekday,n){
+ const first=new Date(year,month-1,1,12);
+ const delta=(weekday-first.getDay()+7)%7;
+ return new Date(year,month-1,1+delta+(n-1)*7,12);
+}
+function generateHolidayMap(year,type){
+ const map={};
+ const put=(date,label)=>{
+   if(date.getFullYear()!==year)return;
+   const kk=k(date); map[kk]=map[kk]?map[kk]+"、"+label:label;
+ };
+ put(new Date(year,0,1,12),"元旦");
+ put(new Date(year,1,28,12),"228");
+ put(new Date(year,3,4,12),"兒童節");
+ put(new Date(year,3,qingmingDay(year),12),"清明");
+ put(new Date(year,4,1,12),"勞動節");
+ put(new Date(year,8,28,12),"教師節");
+ put(new Date(year,9,10,12),"雙十");
+ put(new Date(year,9,25,12),"光復節");
+ put(new Date(year,11,25,12),"行憲紀念日");
+
+ let cny=null;
+ for(let d=new Date(year,0,1,12); d.getFullYear()===year; d=addDays(d,1)){
+   const lp=chineseParts(d);
+   if(lp.m===1&&lp.day===1){cny=new Date(d);break}
+ }
+ if(cny){
+   put(addDays(cny,-1),"除夕");
+   put(cny,"春節初一");
+   put(addDays(cny,1),"春節初二");
+   put(addDays(cny,2),"春節初三");
+ }
+ for(let d=new Date(year,0,1,12); d.getFullYear()===year; d=addDays(d,1)){
+   const lp=chineseParts(d);
+   if(lp.m===5&&lp.day===5) put(d,"端午");
+   if(lp.m===8&&lp.day===15) put(d,"中秋");
+ }
+ if(type==="common"){
+   put(nthWeekday(year,5,0,2),"母親節");
+   put(new Date(year,7,8,12),"父親節");
+ }
+ Object.keys(map).forEach(kk=>map[kk]=dedupe(map[kk].split("、")).join("、"));
+ return map;
+}
+
+let cursor=new Date(2026,7,1,12);
+function applyCalendarFont(){
+ const fonts={
+  system:'system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif',
+  sans:'"Microsoft JhengHei","PingFang TC","Noto Sans TC",sans-serif',
+  rounded:'"Arial Rounded MT Bold","PingFang TC","Microsoft JhengHei",sans-serif',
+  serif:'"PMingLiU","MingLiU","Noto Serif TC",serif',
+  kai:'"DFKai-SB","BiauKai","標楷體","KaiTi","Kaiti TC",serif',
+  mono:'Consolas,"Courier New",monospace'
+ };
+ document.documentElement.style.setProperty("--calendar-font",fonts[state.display.calendarFont||"system"]||fonts.system);
+}
+
+
+const todayBorderWidthEl=document.getElementById("todayBorderWidth");
+const todayBorderColorEl=document.getElementById("todayBorderColor");
+const mcDateColorEl=document.getElementById("mcDateColor");
+
+
+let ymPickerYear=cursor.getFullYear();
+
+function closeYmPicker(){
+ const picker=document.getElementById("ymPicker");
+ picker.classList.remove("show");
+ picker.setAttribute("aria-hidden","true");
+}
+function renderYmPicker(){
+ document.getElementById("ymYearLabel").textContent=ymPickerYear+"年";
+ const months=document.getElementById("ymMonths");
+ months.innerHTML="";
+ for(let m=0;m<12;m++){
+   const b=document.createElement("button");
+   b.type="button";
+   b.textContent=(m+1)+"月";
+   if(ymPickerYear===cursor.getFullYear()&&m===cursor.getMonth())b.classList.add("active");
+   b.addEventListener("click",()=>{
+     cursor=new Date(ymPickerYear,m,1,12);
+     closeYmPicker();
+     render();
+   });
+   months.appendChild(b);
+ }
+}
+function openYmPicker(){
+ ymPickerYear=cursor.getFullYear();
+ renderYmPicker();
+ const picker=document.getElementById("ymPicker");
+ picker.classList.add("show");
+ picker.setAttribute("aria-hidden","false");
+}
+
+const cal=document.getElementById("calendar");
+const weekHeader=document.getElementById("weekHeader");
+const periodStartDay=document.getElementById("periodStartDay"),weekStart=document.getElementById("weekStart");
+const weekendColor=document.getElementById("weekendColor"),
+      weekendDateColor=document.getElementById("weekendDateColor"),
+      publicHolidayColor=document.getElementById("publicHolidayColor"),
+      publicHolidayDateColor=document.getElementById("publicHolidayDateColor"),
+      compHolidayColor=document.getElementById("compHolidayColor"),
+      compHolidayDateColor=document.getElementById("compHolidayDateColor");
+const mcColor=document.getElementById("mcColor");
+const editDate=document.getElementById("editDate"),editA=document.getElementById("editA"),editB=document.getElementById("editB"),editMC=document.getElementById("editMC");
+const holidayEditDate=document.getElementById("holidayEditDate");
+const holidayAutoNote=document.getElementById("holidayAutoNote"),holidayCustomNote=document.getElementById("holidayCustomNote");
+const typeCode=document.getElementById("typeCode"),typeLabel=document.getElementById("typeLabel"),typeColor=document.getElementById("typeColor"),typeList=document.getElementById("typeList");
+periodStartDay.innerHTML=Array.from({length:31},(_,i)=>'<option value="'+(i+1)+'">'+(i+1)+' 日</option>').join("");
+
+
+function getShiftTypes(){
+ if(!Array.isArray(state.shiftTypes)||!state.shiftTypes.length){
+   state.shiftTypes=Object.keys(shifts).map(code=>({
+     code,label:code||"空白",bg:shifts[code].bg,fg:shifts[code].fg
+   }));
+ }
+ return state.shiftTypes;
+}
+function shiftMeta(code){
+ const t=getShiftTypes().find(x=>x.code===code);
+ if(t)return {bg:t.bg||"#eeeeee",fg:t.fg||"#333"};
+ return shifts[code]||shifts[""];
+}
+function refreshShiftSelects(){
+ ["editA","editB","batchAShift","batchBShift"].forEach(id=>{
+   const s=document.getElementById(id);
+   if(!s)return;
+   const old=s.value;
+   s.innerHTML="";
+   getShiftTypes().forEach(t=>{
+     const o=document.createElement("option");
+     o.value=t.code;
+     o.textContent=t.label||t.code||"空白";
+     s.appendChild(o);
+   });
+   if([...s.options].some(o=>o.value===old))s.value=old;
+ });
+}
+function renderTypeList(){
+ if(!typeList)return;
+ typeList.innerHTML="";
+ getShiftTypes().forEach((t,i)=>{
+   const r=document.createElement("div");
+   r.className="listRow";
+   const left=document.createElement("span");
+   left.innerHTML="<strong>"+(t.code||"空白")+"</strong>　"+(t.label||"");
+   const sw=document.createElement("span");
+   sw.style.cssText="display:inline-block;width:30px;height:20px;border:1px solid #ccc;border-radius:6px;background:"+(t.bg||"#eee");
+   r.appendChild(left);r.appendChild(sw);
+   if(t.code!==""){
+     const del=document.createElement("button");
+     del.type="button";del.className="btn secondary";del.textContent="刪除";
+     del.addEventListener("click",()=>{
+       state.shiftTypes=state.shiftTypes.filter((_,idx)=>idx!==i);
+       persist();refreshShiftSelects();renderTypeList();render();
+     });
+     r.appendChild(del);
+   }
+   typeList.appendChild(r);
+ });
+}
+function daysInMonth(y,m){return new Date(y,m+1,0,12).getDate()}
+function clampStartDay(y,m,day){return Math.min(day,daysInMonth(y,m))}
+function periodRange(){
+ const y=cursor.getFullYear(),m=cursor.getMonth(),startDay=parseInt(state.display.periodStartDay,10)||1;
+ const actualStart=clampStartDay(y,m,startDay);
+ const start=new Date(y,m,actualStart,12);
+ let next;
+ if(startDay===1){
+   next=new Date(y,m+1,1,12);
+ }else{
+   const nm=m+1, ny=y+Math.floor(nm/12), realM=((nm%12)+12)%12;
+   next=new Date(ny,realM,clampStartDay(ny,realM,startDay),12);
+ }
+ return {start,end:addDays(next,-1),next};
+}
+function calendarCells(){
+ const pr=periodRange(),weekStartVal=parseInt(state.display.weekStart,10)||0;
+ const offset=(pr.start.getDay()-weekStartVal+7)%7;
+ const gridStart=addDays(pr.start,-offset);
+ const endOffset=(weekStartVal+6-pr.end.getDay()+7)%7;
+ const gridEnd=addDays(pr.end,endOffset);
+ const count=Math.round((gridEnd-gridStart)/86400000)+1;
+ return Array.from({length:count},(_,i)=>addDays(gridStart,i));
+}
+function renderPeople(){
+ const p=state.people;
+ document.getElementById("aName").value=p.aName;document.getElementById("aIcon").value=p.aIcon;
+ document.getElementById("bName").value=p.bName;document.getElementById("bIcon").value=p.bIcon;
+ document.getElementById("aPreviewIcon").textContent=p.aIcon||"A";document.getElementById("aPreviewName").textContent=p.aName||"A";
+ document.getElementById("bPreviewIcon").textContent=p.bIcon||"B";document.getElementById("bPreviewName").textContent=p.bName||"B";
+ document.getElementById("aShiftLabel").textContent=(p.aName||"A")+" 班別";
+ document.getElementById("bShiftLabel").textContent=(p.bName||"B")+" 班別";
+ periodStartDay.value=String(state.display.periodStartDay||1);
+ weekStart.value=String(state.display.weekStart??0);
+ weekendColor.value=state.display.weekendColor||"#faf0d2";
+ weekendDateColor.value=state.display.weekendDateColor||"#ff0000";
+ publicHolidayColor.value=state.display.publicHolidayColor||"#faf0d2";
+ publicHolidayDateColor.value=state.display.publicHolidayDateColor||"#ff0000";
+ compHolidayColor.value=state.display.compHolidayColor||"#faf0d2";
+ compHolidayDateColor.value=state.display.compHolidayDateColor||"#ff0000";
+ mcColor.value=state.display.mcColor||"#ffe4ec";
+ const la=state.logic?.a||{};
+ const lb=state.logic?.b||{};
+ logicAEnabled.checked=la.enabled!==false;
+ logicAStart.value=la.startDate||"2026-01-01";
+ logicASequence.value=(la.sequence||[]).map(x=>x===""?"空白":x).join(",");
+ logicBEnabled.checked=!!lb.enabled;
+ logicBStart.value=lb.startDate||"2026-01-01";
+ logicBSequence.value=(lb.sequence||[]).map(x=>x===""?"空白":x).join(",");
+ document.getElementById("logicATitle").textContent=(state.people.aName||"A")+" 輪班邏輯";
+ document.getElementById("logicBTitle").textContent=(state.people.bName||"B")+" 輪班邏輯";
+ document.getElementById("batchALabel").textContent=state.people.aName||"A";
+ document.getElementById("batchBLabel").textContent=state.people.bName||"B";
+
+}
+
+
+const holidayNames=[
+ "元旦","228","二二八","除夕前一日","小年夜","除夕","春節","初一","初二","初三",
+ "兒童節","清明","勞動節","端午","中秋","教師節","孔子誕辰","雙十",
+ "國慶","光復節","古寧頭","行憲紀念日"
+];
+
+function holidayText(d){
+ const kk=k(d);
+ const source=(imported.notes&&imported.notes[kk])||"";
+ const generated=(state.generated&&state.generated[kk])||"";
+ return [source,generated].filter(Boolean).join(" ");
+}
+
+function isNamedPublicHoliday(d){
+ const text=holidayText(d);
+ return holidayNames.some(name=>text.includes(name));
+}
+
+function hasExplicitCompDay(d){
+ const text=holidayText(d);
+ return text.includes("補假");
+}
+
+function dateOnlyTime(d){
+ return new Date(d.getFullYear(),d.getMonth(),d.getDate(),12).getTime();
+}
+
+function sameDate(a,b){
+ return dateOnlyTime(a)===dateOnlyTime(b);
+}
+
+function isWeekend(d){
+ return d.getDay()===0||d.getDay()===6;
+}
+
+function publicHolidayDatesAround(start,end){
+ // Scan a wider range so a holiday just outside the visible period can create
+ // a compensatory holiday inside it.
+ const scanStart=addDays(start,-10),scanEnd=addDays(end,10);
+ const named=[];
+ for(let d=new Date(scanStart); d<=scanEnd; d=addDays(d,1)){
+   if(isNamedPublicHoliday(d)) named.push(new Date(d));
+ }
+ return named;
+}
+
+function compensationDates(start,end){
+ const named=publicHolidayDatesAround(start,end);
+ const namedKeys=new Set(named.map(k));
+ const comp=new Set();
+
+ function unavailable(d){
+   return isWeekend(d)||namedKeys.has(k(d))||comp.has(k(d));
+ }
+
+ for(const h of named){
+   if(h.getDay()===6){
+     let c=addDays(h,-1);
+     while(unavailable(c)) c=addDays(c,-1);
+     comp.add(k(c));
+   }else if(h.getDay()===0){
+     let c=addDays(h,1);
+     while(unavailable(c)) c=addDays(c,1);
+     comp.add(k(c));
+   }
+ }
+ return comp;
+}
+
+function isCalendarHoliday(d,compSet){
+ if(isWeekend(d)) return true;
+ if(isNamedPublicHoliday(d)) return true;
+ if(hasExplicitCompDay(d)) return true;
+ if(compSet&&compSet.has(k(d))) return true;
+ return false;
+}
+
+function calendarHolidayCount(start,end){
+ const compSet=compensationDates(start,end);
+ let count=0;
+ for(let d=new Date(start); d<=end; d=addDays(d,1)){
+   if(isCalendarHoliday(d,compSet)) count++;
+ }
+ return count;
+}
+
+function holidayVisualType(d,compSet){
+ if(compSet && compSet.has(k(d))) return "comp";
+ if(hasExplicitCompDay(d)) return "comp";
+ if(isNamedPublicHoliday(d)) return "public";
+ return "";
+}
+["batchAShift","batchBShift"].forEach(id=>{
+ const s=document.getElementById(id);
+ if(s&&!s.options.length){
+  Object.keys(shifts).forEach(v=>{
+   const o=document.createElement("option");o.value=v;o.textContent=v||"空白";s.appendChild(o);
+  });
+ }
+});
+function render(){
+ refreshShiftSelects();
+ renderTypeList();
+ const y=cursor.getFullYear(),m=cursor.getMonth(),pr=periodRange();
+ const startDay=parseInt(state.display.periodStartDay,10)||1;
+ const holidayTotal=calendarHolidayCount(pr.start,pr.end);
+ const fmt=d=>d.getFullYear()+"/"+(d.getMonth()+1)+"/"+d.getDate();
+ document.getElementById("monthTitle").textContent=
+   fmt(pr.start)+"～"+fmt(pr.end)+"，共 "+holidayTotal+" 天假日";
+ const names=["日","一","二","三","四","五","六"],ws=parseInt(state.display.weekStart,10)||0;
+ weekHeader.innerHTML=Array.from({length:7},(_,i)=>"<div>"+names[(ws+i)%7]+"</div>").join("");
+ const today=k(new Date());cal.innerHTML="";
+ const visualCompSet=compensationDates(pr.start,pr.end);
+ calendarCells().forEach(d=>{
+   let a="",b="";
+   try{a=shiftFor(d,"a");}catch(e){a=baseShift(d,"a");}
+   try{b=shiftFor(d,"b");}catch(e){b=baseShift(d,"b");}
+   const ab=shiftMeta(a),bb=shiftMeta(b),note=displayNote(d),kk=k(d),mc=!!state.days?.[kk]?.mc,specialNote=recurringSpecialNote(d);
+   const btn=document.createElement("button");btn.type="button";
+   const hv=holidayVisualType(d,visualCompSet);
+ btn.className="day"+((d<pr.start||d>pr.end)?" other":"")+(kk===today?" today":"");
+ if(kk===today){
+   btn.style.outline=(state.display.todayBorderWidth||3)+"px solid "+(state.display.todayBorderColor||"#111827");
+   btn.style.outlineOffset="-2px";
+ }
+ if(mc){
+   btn.style.backgroundColor=state.display.mcColor||"#ffe4ec";
+ }else if(hv==="comp"){
+   btn.style.backgroundColor=state.display.compHolidayColor||"#faf0d2";
+   btn.style.setProperty("--date-color",state.display.compHolidayDateColor||"#ff0000");
+ }else if(hv==="public"){
+   btn.style.backgroundColor=state.display.publicHolidayColor||"#faf0d2";
+   btn.style.setProperty("--date-color",state.display.publicHolidayDateColor||"#ff0000");
+ }else if(isWeekend(d)){
+   btn.style.backgroundColor=state.display.weekendColor||"#faf0d2";
+   btn.style.setProperty("--date-color",state.display.weekendDateColor||"#ff0000");
+ }
+   btn.innerHTML='<div class="num">'+d.getDate()+'</div>'+
+     (state.days[kk]?'<span class="dot"></span>':'')+
+     '<div class="shiftRow"><span class="mark">'+(state.people.aIcon||"A")+'</span><span class="badge" style="background:'+ab.bg+';color:'+ab.fg+'">'+(a||"－")+'</span></div>'+
+     '<div class="shiftRow"><span class="mark">'+(state.people.bIcon||"B")+'</span><span class="badge" style="background:'+bb.bg+';color:'+bb.fg+'">'+(b||"－")+'</span></div>'+
+     '<div class="note">'+([specialNote?"★":"",note,mc?"MC":""].filter(Boolean).join(" · "))+'</div>';
+   if(specialNote){
+     btn.style.boxShadow="inset 0 0 0 2px #d97706";
+   }
+   const numEl=btn.querySelector(".num");
+if(numEl){
+  if(mc) numEl.style.color=state.display.mcDateColor||"#d81b60";
+  else if(hv==="comp") numEl.style.color=state.display.compHolidayDateColor||"#ff0000";
+  else if(hv==="public") numEl.style.color=state.display.publicHolidayDateColor||"#ff0000";
+  else if(isWeekend(d)) numEl.style.color=state.display.weekendDateColor||"#ff0000";
+  else numEl.style.color="";
+}
+   btn.addEventListener("click",()=>openDay(d));cal.appendChild(btn);
+ });
+ renderPeople();renderCustomList();
+}
+function openDay(d){
+ const kk=k(d),ds=state.days[kk]||{};
+ editDate.value=kk;editA.value=shiftFor(d,"a");editB.value=shiftFor(d,"b");editMC.checked=!!ds.mc;
+ holidayEditDate.value=kk;holidayAutoNote.value=baseNotes(d);holidayCustomNote.value=ds.note||"";
+ switchView("settingsView");switchSettingsPage("shiftPage");
+}
+function renderCustomList(){
+ const box=document.getElementById("customList"),keys=Object.keys(state.days).sort();
+ if(!keys.length){box.textContent="尚無資料";return}
+ box.innerHTML="";
+ keys.forEach(kk=>{
+   const ds=state.days[kk],p=[];
+   if(ds.aShift!==undefined)p.push("A "+(ds.aShift||"空白"));
+   if(ds.bShift!==undefined)p.push("B "+(ds.bShift||"空白"));
+   if(ds.note)p.push(ds.note);
+   if(ds.mc)p.push("MC");
+   const r=document.createElement("div");r.className="listRow";r.innerHTML="<span>"+kk+"</span><strong>"+p.join("・")+"</strong>";box.appendChild(r);
+ });
+}
+function switchView(id){
+ document.querySelectorAll(".view").forEach(v=>v.classList.toggle("active",v.id===id));
+ document.querySelectorAll(".navBtn").forEach(b=>b.classList.toggle("active",b.dataset.target===id));
+ window.scrollTo({top:0,behavior:"smooth"});
+}
+function switchSettingsPage(id){
+ document.querySelectorAll(".settingsSubpage").forEach(v=>v.classList.toggle("active",v.id===id));
+ document.querySelectorAll(".settingsTab").forEach(b=>b.classList.toggle("active",b.dataset.settingsPage===id));
+ window.scrollTo({top:0,behavior:"smooth"});
+}
+document.querySelectorAll(".navBtn").forEach(b=>b.addEventListener("click",()=>switchView(b.dataset.target)));
+document.querySelectorAll(".settingsTab").forEach(b=>b.addEventListener("click",()=>switchSettingsPage(b.dataset.settingsPage)));
+document.querySelector(".prev").addEventListener("click",()=>{cursor.setMonth(cursor.getMonth()-1);render()});
+document.querySelector(".next").addEventListener("click",()=>{cursor.setMonth(cursor.getMonth()+1);render()});
+
+document.getElementById("monthJumpBtn").addEventListener("click",openYmPicker);
+document.getElementById("todayBtn").addEventListener("click",()=>{
+ const now=new Date();
+ cursor=new Date(now.getFullYear(),now.getMonth(),1,12);
+ render();
+});
+document.getElementById("ymPrevYear").addEventListener("click",()=>{ymPickerYear--;renderYmPicker();});
+document.getElementById("ymNextYear").addEventListener("click",()=>{ymPickerYear++;renderYmPicker();});
+document.getElementById("ymClose").addEventListener("click",closeYmPicker);
+document.getElementById("ymPicker").addEventListener("click",(e)=>{
+ if(e.target===document.getElementById("ymPicker"))closeYmPicker();
+});
+
+
+document.getElementById("savePeople").addEventListener("click",()=>{
+ state.people={
+   aName:document.getElementById("aName").value.trim()||"A",aIcon:document.getElementById("aIcon").value.trim()||"A",
+   bName:document.getElementById("bName").value.trim()||"B",bIcon:document.getElementById("bIcon").value.trim()||"B"
+ };persist();render();alert("已儲存");
+});
+
+function parseSequenceText(txt){
+ return txt.split(/[,，\n]+/)
+   .map(x=>x.trim())
+   .filter(x=>x.length)
+   .map(x=>(x==="空白"||x==="-"||x==="無")?"":x);
+}
+
+
+function ensureDayObj(kk){
+ if(!state.days)state.days={};
+ if(!state.days[kk])state.days[kk]={};
+ return state.days[kk];
+}
+function cleanupDayObj(kk){
+ const obj=state.days?.[kk];
+ if(obj&&Object.keys(obj).length===0)delete state.days[kk];
+}
+function parseBatchDates(text){
+ const defaultYear=periodRange().start.getFullYear();
+ const raw=text.split(/[\s,，、;；]+/).map(x=>x.trim()).filter(Boolean);
+ const out=[],seen=new Set();
+ for(const token of raw){
+   let y,m,d;
+   let t=token.replace(/-/g,"/").replace(/\./g,"/");
+   const parts=t.split("/").filter(Boolean).map(Number);
+   if(parts.length===3){[y,m,d]=parts;}
+   else if(parts.length===2){y=defaultYear;[m,d]=parts;}
+   else continue;
+   const dt=new Date(y,m-1,d,12);
+   if(dt.getFullYear()!==y||dt.getMonth()!==m-1||dt.getDate()!==d)continue;
+   const kk=k(dt);
+   if(!seen.has(kk)){seen.add(kk);out.push(dt);}
+ }
+ return out.sort((a,b)=>a-b);
+}
+document.getElementById("applyBatch").addEventListener("click",()=>{
+ const dates=parseBatchDates(batchDates.value);
+ if(!dates.length){alert("請輸入至少一個有效日期");return;}
+ if(!batchAEnabled.checked&&!batchBEnabled.checked){alert("請至少勾選一位要修改的人員");return;}
+ for(const d of dates){
+   const obj=ensureDayObj(k(d));
+   if(batchAEnabled.checked)obj.aShift=batchAShift.value;
+   if(batchBEnabled.checked)obj.bShift=batchBShift.value;
+ }
+ persist();render();alert("已批量修改 "+dates.length+" 個日期");
+});
+document.getElementById("restoreBatch").addEventListener("click",()=>{
+ const dates=parseBatchDates(batchDates.value);
+ if(!dates.length){alert("請輸入至少一個有效日期");return;}
+ if(!batchAEnabled.checked&&!batchBEnabled.checked){alert("請至少勾選一位要恢復的人員");return;}
+ for(const d of dates){
+   const kk=k(d),obj=state.days?.[kk];
+   if(!obj)continue;
+   if(batchAEnabled.checked)delete obj.aShift;
+   if(batchBEnabled.checked)delete obj.bShift;
+   cleanupDayObj(kk);
+ }
+ persist();render();alert("已恢復 "+dates.length+" 個日期的原本班別");
+});
+
+document.getElementById("addType").addEventListener("click",()=>{
+ const code=typeCode.value.trim(),label=typeLabel.value.trim()||code;
+ if(!code){alert("請輸入代碼");return;}
+ if(getShiftTypes().some(t=>t.code===code)){alert("這個代碼已存在");return;}
+ state.shiftTypes.push({code,label,bg:typeColor.value||"#eeeeee",fg:"#333333"});
+ typeCode.value="";typeLabel.value="";
+ persist();refreshShiftSelects();renderTypeList();render();
+ alert("已新增 "+label);
+});
+document.getElementById("saveLogic").addEventListener("click",()=>{
+ const aSeq=parseSequenceText(logicASequence.value);
+ const bSeq=parseSequenceText(logicBSequence.value);
+ if(logicAEnabled.checked && !aSeq.length){alert("A 輪班順序不能是空的");return;}
+ if(logicBEnabled.checked && !bSeq.length){alert("B 輪班順序不能是空的");return;}
+ state.logic={
+   a:{enabled:logicAEnabled.checked,startDate:logicAStart.value||"2026-01-01",sequence:aSeq},
+   b:{enabled:logicBEnabled.checked,startDate:logicBStart.value||"2026-01-01",sequence:bSeq}
+ };
+ persist();render();alert("已儲存班別邏輯，起始日之後的班表已重新套用");
+});
+document.getElementById("resetLogic").addEventListener("click",()=>{
+ state.logic={
+  a:{enabled:true,startDate:"2026-01-01",sequence:["早","早","早","早","V","V","中","中","中","中","中","V","V","夜","夜","夜","夜","夜","V"]},
+  b:{enabled:false,startDate:"2026-01-01",sequence:["V","","","","","V","V"]}
+ };
+ persist();render();alert("已恢復預設班別邏輯");
+});
+document.getElementById("saveDisplay").addEventListener("click",()=>{
+ state.display={
+   ...state.display,
+   periodStartDay:Math.max(1,Math.min(31,parseInt(periodStartDay.value,10)||1)),
+   weekStart:Math.max(0,Math.min(6,parseInt(weekStart.value,10)||0)),
+   weekendColor:weekendColor.value||"#faf0d2",
+   weekendDateColor:weekendDateColor.value||"#ff0000",
+   publicHolidayColor:publicHolidayColor.value||"#faf0d2",
+   publicHolidayDateColor:publicHolidayDateColor.value||"#ff0000",
+   compHolidayColor:compHolidayColor.value||"#faf0d2",
+   compHolidayDateColor:compHolidayDateColor.value||"#ff0000",
+   mcColor:mcColor.value||"#ffe4ec",
+   calendarFont:document.getElementById("calendarFont").value||"system"
+ };
+ applyCalendarFont();persist();render();alert("已儲存月曆顯示設定");
+
+ state.display.todayBorderWidth=parseInt(document.getElementById("todayBorderWidth").value,10)||3;
+ state.display.todayBorderColor=document.getElementById("todayBorderColor").value||"#111827";
+ state.display.mcDateColor=document.getElementById("mcDateColor").value||"#d81b60";
+});
+[weekendColor,weekendDateColor,publicHolidayColor,publicHolidayDateColor,compHolidayColor,compHolidayDateColor,mcColor].forEach(el=>{
+ el.addEventListener("input",()=>{
+   state.display={
+     ...state.display,
+     weekendColor:weekendColor.value||"#faf0d2",
+     weekendDateColor:weekendDateColor.value||"#ff0000",
+     publicHolidayColor:publicHolidayColor.value||"#faf0d2",
+     publicHolidayDateColor:publicHolidayDateColor.value||"#ff0000",
+     compHolidayColor:compHolidayColor.value||"#faf0d2",
+     compHolidayDateColor:compHolidayDateColor.value||"#ff0000",
+     mcColor:mcColor.value||"#ffe4ec"
+   };
+   render();
+ });
+});
+document.getElementById("generateHolidays").addEventListener("click",()=>{
+ const y=Math.max(2026,Math.min(2099,parseInt(document.getElementById("holidayYear").value,10)||2027));
+ const type=document.getElementById("holidayType").value,map=generateHolidayMap(y,type);
+ Object.entries(map).forEach(([kk,v])=>state.generated[kk]=v);
+ persist();render();
+ document.getElementById("holidayResult").textContent="已產生 "+y+" 年，共 "+Object.keys(map).length+" 個日期："+Object.entries(map).map(([kk,v])=>kk.slice(5)+" "+v).join("、");
+});
+document.getElementById("removeGenerated").addEventListener("click",()=>{
+ const y=String(Math.max(2026,Math.min(2099,parseInt(document.getElementById("holidayYear").value,10)||2027)));
+ Object.keys(state.generated).filter(kk=>kk.startsWith(y+"-")).forEach(kk=>delete state.generated[kk]);
+ persist();render();document.getElementById("holidayResult").textContent="已清除 "+y+" 年自動節日。";
+});
+document.getElementById("saveDay").addEventListener("click",()=>{
+ if(!editDate.value){alert("請選日期");return}
+ const d=dFromKey(editDate.value),ds={...(state.days[editDate.value]||{})};
+ if(editA.value!==baseShift(d,"a"))ds.aShift=editA.value;else delete ds.aShift;
+ if(editB.value!==baseShift(d,"b"))ds.bShift=editB.value;else delete ds.bShift;
+ if(editMC.checked)ds.mc=true;else delete ds.mc;
+ if(Object.keys(ds).length)state.days[editDate.value]=ds;else delete state.days[editDate.value];
+ persist();render();alert("已儲存班別");
+});
+document.getElementById("resetDay").addEventListener("click",()=>{
+ if(!editDate.value)return;
+ const ds={...(state.days[editDate.value]||{})};delete ds.aShift;delete ds.bShift;delete ds.mc;
+ if(Object.keys(ds).length)state.days[editDate.value]=ds;else delete state.days[editDate.value];
+ const d=dFromKey(editDate.value);editA.value=baseShift(d,"a");editB.value=baseShift(d,"b");editMC.checked=false;persist();render();
+});
+editDate.addEventListener("change",()=>{
+ if(!editDate.value)return;
+ const d=dFromKey(editDate.value),ds=state.days[editDate.value]||{};editA.value=shiftFor(d,"a");editB.value=shiftFor(d,"b");editMC.checked=!!ds.mc;
+});
+holidayEditDate.addEventListener("change",()=>{
+ if(!holidayEditDate.value)return;
+ const d=dFromKey(holidayEditDate.value),ds=state.days[holidayEditDate.value]||{};
+ holidayAutoNote.value=baseNotes(d);holidayCustomNote.value=ds.note||"";
+});
+document.getElementById("saveHolidayNote").addEventListener("click",()=>{
+ if(!holidayEditDate.value){alert("請選日期");return}
+ const ds={...(state.days[holidayEditDate.value]||{})},note=holidayCustomNote.value.trim();
+ if(note)ds.note=note;else delete ds.note;
+ if(Object.keys(ds).length)state.days[holidayEditDate.value]=ds;else delete state.days[holidayEditDate.value];
+ persist();render();alert("已儲存標記");
+});
+document.getElementById("clearHolidayNote").addEventListener("click",()=>{
+ if(!holidayEditDate.value)return;
+ const ds={...(state.days[holidayEditDate.value]||{})};delete ds.note;
+ if(Object.keys(ds).length)state.days[holidayEditDate.value]=ds;else delete state.days[holidayEditDate.value];
+ holidayCustomNote.value="";persist();render();
+});
+
+editDate.value="2026-08-30";
+holidayEditDate.value="2026-08-30";
+holidayAutoNote.value=baseNotes(dFromKey(holidayEditDate.value));
+holidayCustomNote.value=(state.days[holidayEditDate.value]||{}).note||"";
+
+if(todayBorderWidthEl){
+  todayBorderWidthEl.value=String(state.display.todayBorderWidth??3);
+  todayBorderWidthEl.addEventListener("change",()=>{
+    state.display.todayBorderWidth=parseInt(todayBorderWidthEl.value,10)||3;
+    save();render();
+  });
+}
+if(todayBorderColorEl){
+  todayBorderColorEl.value=state.display.todayBorderColor||"#111827";
+  todayBorderColorEl.addEventListener("input",()=>{
+    state.display.todayBorderColor=todayBorderColorEl.value;
+    save();render();
+  });
+}
+if(mcDateColorEl){
+  mcDateColorEl.value=state.display.mcDateColor||"#d81b60";
+  mcDateColorEl.addEventListener("input",()=>{
+    state.display.mcDateColor=mcDateColorEl.value;
+    save();render();
+  });
+}
+
+const calendarFontEl=document.getElementById("calendarFont");
+calendarFontEl.value=state.display.calendarFont||"system";
+applyCalendarFont();
+calendarFontEl.addEventListener("change",()=>{
+ state.display.calendarFont=calendarFontEl.value||"system";
+ applyCalendarFont();
+ render();
+});
+
+render();
+if("serviceWorker" in navigator&&location.protocol!=="file:")navigator.serviceWorker.register("./sw.js").catch(()=>{});
+})();
+</script>
+</body></html>
