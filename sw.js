@@ -1,4 +1,4 @@
-const CACHE_NAME = "shift-calendar-firebase-sync-v3";
+const CACHE_NAME = "shift-calendar-firebase-sync-v4";
 const APP_SHELL = [
   "./",
   "./index.html",
