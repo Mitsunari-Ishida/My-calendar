@@ -480,7 +480,13 @@ try{
  const s=JSON.parse(localStorage.getItem("shiftPwaV4")||"null");
  if(s) state={...state,...s,people:{...state.people,...(s.people||{})},display:{...state.display,...(s.display||{})},shiftTypes:Array.isArray(s.shiftTypes)&&s.shiftTypes.length?s.shiftTypes:state.shiftTypes,days:s.days||{},generated:s.generated||{}};
 }catch(e){}
-const persist=()=>localStorage.setItem("shiftPwaV4",JSON.stringify(state));
+const persist=()=>{
+  const json=JSON.stringify(state);
+  localStorage.setItem("shiftPwaV4",json);
+  if(typeof window.__shiftCloudPersistHook==="function"){
+    try{ window.__shiftCloudPersistHook(json); }catch(e){ console.warn("cloud persist hook",e); }
+  }
+};
 const k=d=>d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");
 const dFromKey=x=>{const p=x.split("-").map(Number);return new Date(p[0],p[1]-1,p[2],12)};
 const parseDate=x=>{
@@ -1221,6 +1227,41 @@ calendarFontEl.addEventListener("change",()=>{
  render();
 });
 
+window.__shiftCloudBridge={
+  getStateJson(){
+    return JSON.stringify(state);
+  },
+  applyStateJson(json){
+    const incoming=typeof json==="string"?JSON.parse(json):json;
+    if(!incoming || typeof incoming!=="object") throw new Error("雲端班表格式不正確");
+
+    state={
+      ...state,
+      ...incoming,
+      people:{...state.people,...(incoming.people||{})},
+      display:{...state.display,...(incoming.display||{})},
+      logic:{
+        ...state.logic,
+        ...(incoming.logic||{}),
+        a:{...(state.logic?.a||{}),...(incoming.logic?.a||{})},
+        b:{...(state.logic?.b||{}),...(incoming.logic?.b||{})}
+      },
+      shiftTypes:Array.isArray(incoming.shiftTypes)&&incoming.shiftTypes.length
+        ? incoming.shiftTypes
+        : state.shiftTypes,
+      days:incoming.days&&typeof incoming.days==="object"?incoming.days:{},
+      generated:incoming.generated&&typeof incoming.generated==="object"?incoming.generated:{}
+    };
+
+    localStorage.setItem("shiftPwaV4",JSON.stringify(state));
+    applyCalendarFont();
+    refreshShiftSelects();
+    renderTypeList();
+    renderPeople();
+    render();
+  }
+};
+
 render();
 if("serviceWorker" in navigator&&location.protocol!=="file:")navigator.serviceWorker.register("./sw.js").catch(()=>{});
 })();
@@ -1232,6 +1273,10 @@ if("serviceWorker" in navigator&&location.protocol!=="file:")navigator.serviceWo
     getAuth, GoogleAuthProvider, signInWithPopup,
     onAuthStateChanged, signOut
   } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-auth.js";
+  import {
+    getFirestore, doc, getDoc, setDoc, onSnapshot,
+    serverTimestamp
+  } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore.js";
 
   const firebaseConfig = {
     apiKey: "AIzaSyAGwPAu5znyu2KlfU3N7aK1pP6pqsigJ_c",
@@ -1245,56 +1290,178 @@ if("serviceWorker" in navigator&&location.protocol!=="file:")navigator.serviceWo
 
   const app = initializeApp(firebaseConfig);
   const auth = getAuth(app);
+  const db = getFirestore(app);
   const provider = new GoogleAuthProvider();
   provider.setCustomParameters({ prompt: "select_account" });
+
+  const SHARED_DOC = doc(db, "sharedCalendars", "our-calendar");
 
   const btn = document.getElementById("firebaseLoginBtn");
   const statusEl = document.getElementById("firebaseLoginStatus");
   const uidEl = document.getElementById("firebaseUid");
 
-  function envText() {
-    return [
-      "目前網址：" + location.href,
-      "目前網域：" + location.hostname,
-      "目前 Origin：" + location.origin,
-      "Firebase authDomain：" + firebaseConfig.authDomain
-    ].join("\n");
+  let currentUser = null;
+  let unsubscribeCloud = null;
+  let syncReady = false;
+  let applyingRemote = false;
+  let saveTimer = null;
+  let lastAppliedCloudJson = null;
+
+  function setStatus(main, sub=""){
+    statusEl.textContent = main;
+    uidEl.textContent = sub;
   }
 
-  async function login() {
-    try {
-      const result = await signInWithPopup(auth, provider);
-      console.log("Firebase Google login OK", result.user?.uid);
-    } catch (err) {
-      console.error("Firebase Google login error", err);
-      const code = err?.code || "(無錯誤代碼)";
-      const msg = err?.message || String(err);
-      alert(
-        "Google 登入失敗\n\n" +
-        "錯誤代碼：" + code + "\n" +
-        "錯誤訊息：" + msg + "\n\n" +
-        envText()
-      );
+  function readableError(err){
+    const code=err?.code||"";
+    if(code==="permission-denied" || code==="firestore/permission-denied"){
+      return "Firestore 權限不足，請確認剛才的兩個 UID 規則已發布。";
+    }
+    if(code==="auth/unauthorized-domain"){
+      return "此網域尚未加入 Firebase Authentication 的授權網域。";
+    }
+    return (code?code+"：":"")+(err?.message||String(err));
+  }
+
+  async function login(){
+    try{
+      await signInWithPopup(auth,provider);
+    }catch(err){
+      console.error(err);
+      alert("Google 登入失敗：\n"+readableError(err));
     }
   }
 
-  btn.addEventListener("click", async () => {
-    if (auth.currentUser) {
-      await signOut(auth);
-    } else {
-      await login();
-    }
+  btn.addEventListener("click",async()=>{
+    if(auth.currentUser) await signOut(auth);
+    else await login();
   });
 
-  onAuthStateChanged(auth, user => {
-    if (user) {
-      statusEl.textContent = "已登入：" + (user.email || user.displayName || "Google 帳號");
-      uidEl.textContent = "UID：" + user.uid;
-      btn.textContent = "登出";
-    } else {
-      statusEl.textContent = "尚未登入雲端";
-      uidEl.textContent = "網域：" + location.hostname;
-      btn.textContent = "Google 登入";
+  async function writeCloud(json){
+    if(!currentUser || !syncReady || applyingRemote) return;
+    try{
+      setStatus("已登入："+(currentUser.email||currentUser.displayName||"Google 帳號"),"☁️ 正在同步…");
+      await setDoc(SHARED_DOC,{
+        stateJson:json,
+        updatedAt:serverTimestamp(),
+        updatedBy:currentUser.uid
+      },{merge:true});
+      setStatus("已登入："+(currentUser.email||currentUser.displayName||"Google 帳號"),
+        "☁️ 雲端已同步　UID："+currentUser.uid);
+    }catch(err){
+      console.error("cloud write",err);
+      setStatus("已登入，但雲端儲存失敗",readableError(err));
+    }
+  }
+
+  window.__shiftCloudPersistHook=(json)=>{
+    if(!syncReady || applyingRemote || !currentUser) return;
+    if(json===lastAppliedCloudJson) return;
+    clearTimeout(saveTimer);
+    saveTimer=setTimeout(()=>writeCloud(json),500);
+  };
+
+  function backupLocalBeforeFirstCloudApply(){
+    try{
+      const current=window.__shiftCloudBridge?.getStateJson?.();
+      if(current){
+        const key="shiftPwaV4_backup_before_cloud_"+Date.now();
+        localStorage.setItem(key,current);
+      }
+    }catch(e){ console.warn("local backup",e); }
+  }
+
+  function applyCloud(json){
+    if(!json || json===lastAppliedCloudJson) return;
+    try{
+      applyingRemote=true;
+      lastAppliedCloudJson=json;
+      window.__shiftCloudBridge.applyStateJson(json);
+    }catch(err){
+      console.error("apply cloud",err);
+      alert("雲端班表讀取失敗："+(err?.message||err));
+    }finally{
+      applyingRemote=false;
+    }
+  }
+
+  async function startCloudSync(user){
+    syncReady=false;
+    setStatus("已登入："+(user.email||user.displayName||"Google 帳號"),"☁️ 正在連接雲端…");
+
+    try{
+      const snap=await getDoc(SHARED_DOC);
+
+      if(snap.exists() && snap.data()?.stateJson){
+        backupLocalBeforeFirstCloudApply();
+        applyCloud(snap.data().stateJson);
+        syncReady=true;
+        setStatus("已登入："+(user.email||user.displayName||"Google 帳號"),
+          "☁️ 雲端已同步　UID："+user.uid);
+      }else{
+        const ok=confirm(
+          "雲端目前還沒有班表資料。\n\n"+
+          "是否用「這台裝置目前的班表」建立第一份雲端班表？\n\n"+
+          "請確認這台就是目前資料最完整、最正確的裝置。"
+        );
+        if(!ok){
+          setStatus("已登入，但尚未建立雲端班表","UID："+user.uid);
+          return;
+        }
+
+        const localJson=window.__shiftCloudBridge.getStateJson();
+        await setDoc(SHARED_DOC,{
+          stateJson:localJson,
+          updatedAt:serverTimestamp(),
+          updatedBy:user.uid
+        });
+        lastAppliedCloudJson=localJson;
+        syncReady=true;
+        setStatus("已登入："+(user.email||user.displayName||"Google 帳號"),
+          "☁️ 已建立雲端班表　UID："+user.uid);
+      }
+
+      unsubscribeCloud=onSnapshot(SHARED_DOC,(snap)=>{
+        if(!snap.exists()) return;
+        const cloudJson=snap.data()?.stateJson;
+        if(!cloudJson) return;
+
+        if(cloudJson!==lastAppliedCloudJson){
+          applyCloud(cloudJson);
+        }
+
+        if(currentUser){
+          setStatus("已登入："+(currentUser.email||currentUser.displayName||"Google 帳號"),
+            "☁️ 雲端已同步　UID："+currentUser.uid);
+        }
+      },(err)=>{
+        console.error("cloud listener",err);
+        setStatus("已登入，但雲端連線失敗",readableError(err));
+      });
+
+    }catch(err){
+      console.error("startCloudSync",err);
+      setStatus("已登入，但無法讀取雲端",readableError(err));
+      alert("雲端同步啟動失敗：\n"+readableError(err));
+    }
+  }
+
+  onAuthStateChanged(auth,async user=>{
+    if(unsubscribeCloud){
+      unsubscribeCloud();
+      unsubscribeCloud=null;
+    }
+    clearTimeout(saveTimer);
+    currentUser=user||null;
+    syncReady=false;
+    lastAppliedCloudJson=null;
+
+    if(user){
+      btn.textContent="登出";
+      await startCloudSync(user);
+    }else{
+      btn.textContent="Google 登入";
+      setStatus("尚未登入雲端","本機班表仍可正常使用");
     }
   });
 </script>
