@@ -128,6 +128,14 @@ body.readerMode .day{cursor:default}
 #roleBadge.admin{background:#ecfdf5;color:#047857}
 #roleBadge.reader{background:#fef3c7;color:#92400e}
 
+
+.holidayCountLine{
+  margin:2px 2px 8px;
+  font-size:13px;
+  font-weight:700;
+  color:#6b7280;
+  text-align:right;
+}
 </style>
 </head>
 <body>
@@ -148,7 +156,7 @@ body.readerMode .day{cursor:default}
     background:#fff;border:1px solid #d1d5db;border-radius:14px;
     box-shadow:0 10px 28px rgba(0,0,0,.18);padding:12px;
   ">
-    <div style="font-size:10px;color:#9ca3af;margin-bottom:5px">版本：V7</div>
+    <div style="font-size:10px;color:#9ca3af;margin-bottom:5px">版本：V8</div>
     <div id="roleBadge">尚未登入</div>
     <div id="firebaseLoginStatus" style="font-weight:700;font-size:14px;margin-bottom:6px">尚未登入雲端</div>
     <div id="firebaseUid" style="font-size:11px;color:#6b7280;word-break:break-all;margin-bottom:10px">
@@ -172,6 +180,7 @@ body.readerMode .day{cursor:default}
       <button class="arrow next" type="button" aria-label="下一月">›</button>
       <button class="todayBtn" id="todayBtn" type="button">今天</button>
     </div>
+    <div id="holidayCountLine" class="holidayCountLine"></div>
     <div id="weekHeader" class="week"></div>
     <div id="calendar" class="calendar"></div>
   </div>
@@ -318,6 +327,7 @@ body.readerMode .day{cursor:default}
         <label>自訂標記 / 行程</label><textarea id="holidayCustomNote" maxlength="50" placeholder="例如：高雄、聚餐、回診、開會"></textarea>
         <button id="saveHolidayNote" class="btn primary" type="button">儲存這天標記</button>
         <button id="clearHolidayNote" class="btn secondary" type="button">清除這天自訂標記</button>
+        <button id="clearAllDayMarkers" class="btn secondary" type="button" style="border-color:#fecaca;color:#b91c1c">清除當日所有標記</button>
       </div>
     </div>
   
@@ -552,6 +562,7 @@ function shiftFor(d,p){
 }
 function baseNotes(d){
  const kk=k(d), out=[];
+ if(state.days?.[kk]?.suppressAllMarkers)return "";
  if(imported.notes[kk]) out.push(imported.notes[kk]);
  if(state.generated[kk]) out.push(state.generated[kk]);
  return dedupe(out.join("、").split("、")).join("、");
@@ -566,6 +577,7 @@ function recurringSpecialNote(d){
 }
 function displayNote(d){
  const kk=k(d);
+ if(state.days?.[kk]?.suppressAllMarkers)return "";
  const source=(imported.notes&&imported.notes[kk])||"";
  const generated=(state.generated&&state.generated[kk])||"";
  const custom=(state.days&&state.days[kk]&&state.days[kk].note)||"";
@@ -917,9 +929,9 @@ function render(){
  const y=cursor.getFullYear(),m=cursor.getMonth(),pr=periodRange();
  const startDay=parseInt(state.display.periodStartDay,10)||1;
  const holidayTotal=calendarHolidayCount(pr.start,pr.end);
- const fmt=d=>d.getFullYear()+"/"+(d.getMonth()+1)+"/"+d.getDate();
- document.getElementById("monthTitle").textContent=
-   fmt(pr.start)+"～"+fmt(pr.end)+"，共 "+holidayTotal+" 天假日";
+ const fmt=d=>String(d.getFullYear()).slice(-2)+"/"+String(d.getMonth()+1).padStart(2,"0")+"/"+String(d.getDate()).padStart(2,"0");
+ document.getElementById("monthTitle").textContent=fmt(pr.start)+"～"+fmt(pr.end);
+ document.getElementById("holidayCountLine").textContent="休假日共 "+holidayTotal+" 天";
  const names=["日","一","二","三","四","五","六"],ws=parseInt(state.display.weekStart,10)||0;
  weekHeader.innerHTML=Array.from({length:7},(_,i)=>"<div>"+names[(ws+i)%7]+"</div>").join("");
  const today=k(new Date());cal.innerHTML="";
@@ -928,7 +940,8 @@ function render(){
    let a="",b="";
    try{a=shiftFor(d,"a");}catch(e){a=baseShift(d,"a");}
    try{b=shiftFor(d,"b");}catch(e){b=baseShift(d,"b");}
-   const ab=shiftMeta(a),bb=shiftMeta(b),note=displayNote(d),kk=k(d),mc=!!state.days?.[kk]?.mc,specialNote=recurringSpecialNote(d);
+   const ab=shiftMeta(a),bb=shiftMeta(b),note=displayNote(d),kk=k(d),mc=!!state.days?.[kk]?.mc,
+         specialNote=state.days?.[kk]?.suppressAllMarkers?"":recurringSpecialNote(d);
    const btn=document.createElement("button");btn.type="button";
    const hv=holidayVisualType(d,visualCompSet);
  btn.className="day"+((d<pr.start||d>pr.end)?" other":"")+(kk===today?" today":"");
@@ -972,7 +985,7 @@ function openDay(d){
  if(window.__shiftReadOnly)return;
  const kk=k(d),ds=state.days[kk]||{};
  editDate.value=kk;editA.value=shiftFor(d,"a");editB.value=shiftFor(d,"b");editMC.checked=!!ds.mc;
- holidayEditDate.value=kk;holidayAutoNote.value=baseNotes(d);holidayCustomNote.value=ds.note||"";
+ holidayEditDate.value=kk;holidayAutoNote.value=ds.suppressAllMarkers?"":baseNotes(d);holidayCustomNote.value=ds.note||"";
  switchView("settingsView");switchSettingsPage("shiftPage");
 }
 function renderCustomList(){
@@ -1007,7 +1020,12 @@ document.querySelector(".next").addEventListener("click",()=>{cursor.setMonth(cu
 document.getElementById("monthJumpBtn").addEventListener("click",openYmPicker);
 document.getElementById("todayBtn").addEventListener("click",()=>{
  const now=new Date();
- cursor=new Date(now.getFullYear(),now.getMonth(),1,12);
+ const startDay=parseInt(state.display.periodStartDay,10)||1;
+ if(startDay===1 || now.getDate()>=startDay){
+   cursor=new Date(now.getFullYear(),now.getMonth(),1,12);
+ }else{
+   cursor=new Date(now.getFullYear(),now.getMonth()-1,1,12);
+ }
  render();
 });
 document.getElementById("ymPrevYear").addEventListener("click",()=>{ymPickerYear--;renderYmPicker();});
@@ -1181,12 +1199,15 @@ editDate.addEventListener("change",()=>{
 holidayEditDate.addEventListener("change",()=>{
  if(!holidayEditDate.value)return;
  const d=dFromKey(holidayEditDate.value),ds=state.days[holidayEditDate.value]||{};
- holidayAutoNote.value=baseNotes(d);holidayCustomNote.value=ds.note||"";
+ holidayAutoNote.value=ds.suppressAllMarkers?"":baseNotes(d);holidayCustomNote.value=ds.note||"";
 });
 document.getElementById("saveHolidayNote").addEventListener("click",()=>{
  if(!holidayEditDate.value){alert("請選日期");return}
  const ds={...(state.days[holidayEditDate.value]||{})},note=holidayCustomNote.value.trim();
- if(note)ds.note=note;else delete ds.note;
+ if(note){
+   ds.note=note;
+   delete ds.suppressAllMarkers;
+ }else delete ds.note;
  if(Object.keys(ds).length)state.days[holidayEditDate.value]=ds;else delete state.days[holidayEditDate.value];
  persist();render();alert("已儲存標記");
 });
@@ -1195,6 +1216,20 @@ document.getElementById("clearHolidayNote").addEventListener("click",()=>{
  const ds={...(state.days[holidayEditDate.value]||{})};delete ds.note;
  if(Object.keys(ds).length)state.days[holidayEditDate.value]=ds;else delete state.days[holidayEditDate.value];
  holidayCustomNote.value="";persist();render();
+});
+
+document.getElementById("clearAllDayMarkers").addEventListener("click",()=>{
+ if(window.__shiftReadOnly)return;
+ if(!holidayEditDate.value){alert("請先選日期");return}
+ if(!confirm("確定要清除這一天所有標記嗎？\n原表標記、自動節日文字、自訂行程與固定紀念標記都會隱藏。"))return;
+ const kk=holidayEditDate.value;
+ const ds={...(state.days[kk]||{})};
+ delete ds.note;
+ ds.suppressAllMarkers=true;
+ state.days[kk]=ds;
+ holidayCustomNote.value="";
+ holidayAutoNote.value="";
+ persist();render();
 });
 
 editDate.value="2026-08-30";
