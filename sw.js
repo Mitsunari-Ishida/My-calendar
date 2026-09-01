@@ -1,4 +1,4 @@
-const CACHE_NAME = "shift-calendar-firebase-sync-v12";
+const CACHE_NAME = "shift-calendar-firebase-sync-v13";
 
 const APP_SHELL = [
   "./manifest.webmanifest",
