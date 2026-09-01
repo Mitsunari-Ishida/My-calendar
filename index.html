@@ -228,7 +228,7 @@ body.readerMode .day{cursor:default}
     background:#fff;border:1px solid #d1d5db;border-radius:14px;
     box-shadow:0 10px 28px rgba(0,0,0,.18);padding:12px;
   ">
-    <div style="font-size:10px;color:#9ca3af;margin-bottom:5px">版本：V11</div>
+    <div style="font-size:10px;color:#9ca3af;margin-bottom:5px">版本：V12</div>
     <div id="roleBadge">尚未登入</div>
     <div id="firebaseLoginStatus" style="font-weight:700;font-size:14px;margin-bottom:6px">尚未登入雲端</div>
     <div id="firebaseUid" style="font-size:11px;color:#6b7280;word-break:break-all;margin-bottom:10px">
@@ -412,17 +412,8 @@ body.readerMode .day{cursor:default}
     <div class="stack">
       <div class="status">臨時改班只覆寫指定日期，取消後會恢復原本班別。</div>
       <div class="settingsCard">
-        <h3>修改某一天班別</h3>
-        <label>日期</label><input id="editDate" type="date">
-        <label id="aShiftLabel">A 班別</label><select id="editA"></select>
-        <label id="bShiftLabel">B 班別</label><select id="editB"></select>
-        <label class="switchLine"><input id="editMC" type="checkbox"> MC來</label>
-        <button id="saveDay" class="btn primary" type="button">儲存班別修改</button>
-        <button id="resetDay" class="btn secondary" type="button">恢復原本班別</button>
-      </div>
-      <div class="settingsCard">
-        <h3>批量修改班別</h3>
-        <p class="help">先用小月曆勾選要修改的日期，可跨月份多選；選完日期後，再選擇人員與班別，最後按確認。</p>
+        <h3>班別修改</h3>
+        <p class="help">先用小月曆勾選日期，可單選、多選或跨月份；再選擇要修改的班別或 MC，最後按確認。</p>
 
         <label>選擇日期</label>
         <button id="openBatchPicker" class="btn secondary" type="button">📅 開啟多選月曆</button>
@@ -435,8 +426,14 @@ body.readerMode .day{cursor:default}
         <label class="switchLine"><input id="batchBEnabled" type="checkbox"> 修改 <span id="batchBLabel">B</span></label>
         <select id="batchBShift"></select>
 
-        <button id="applyBatch" class="btn primary" type="button">確認批量修改</button>
-        <button id="restoreBatch" class="btn secondary" type="button">批量恢復原本班別</button>
+        <label class="switchLine"><input id="batchMCEnabled" type="checkbox"> 修改 MC</label>
+        <select id="batchMCValue">
+          <option value="on">MC 開啟</option>
+          <option value="off">MC 關閉</option>
+        </select>
+
+        <button id="applyBatch" class="btn primary" type="button">確認班別修改</button>
+        <button id="restoreBatch" class="btn secondary" type="button">恢復所選日期原本班別／MC</button>
       </div>
 
 <div class="settingsCard">
@@ -449,7 +446,7 @@ body.readerMode .day{cursor:default}
     <div class="stack">
         <div class="settingsCard">
           <h3>班別邏輯設定</h3>
-          <p class="help">這是設定頁第 4 頁。啟用後，從「邏輯起始日」開始會直接依照新的輪班順序顯示；手動單日／批量修改仍然最優先。起始日前則保留原始班表。</p>
+          <p class="help">這是設定頁第 4 頁。啟用後，從「邏輯起始日」開始會直接依照新的輪班順序顯示；手動班別修改仍然最優先。起始日前則保留原始班表。</p>
 
           <h4 id="logicATitle">A 輪班邏輯</h4>
           <label class="switchLine"><input id="logicAEnabled" type="checkbox"> 啟用 A 自動輪班</label>
@@ -480,7 +477,7 @@ body.readerMode .day{cursor:default}
     <div class="stack">
       <div class="settingsCard">
         <h3>班別／假別管理</h3>
-        <p class="help">之後有新的假別，不需要再改程式。新增後會自動出現在單日修改與批量修改選單。</p>
+        <p class="help">之後有新的假別，不需要再改程式。新增後會自動出現在班別修改選單。</p>
         <div class="yearRow">
           <div>
             <label>代碼</label>
@@ -805,7 +802,6 @@ const weekendColor=document.getElementById("weekendColor"),
       compHolidayColor=document.getElementById("compHolidayColor"),
       compHolidayDateColor=document.getElementById("compHolidayDateColor");
 const mcColor=document.getElementById("mcColor");
-const editDate=document.getElementById("editDate"),editA=document.getElementById("editA"),editB=document.getElementById("editB"),editMC=document.getElementById("editMC");
 const holidayEditDate=document.getElementById("holidayEditDate");
 const holidayAutoNote=document.getElementById("holidayAutoNote"),holidayCustomNote=document.getElementById("holidayCustomNote");
 const typeCode=document.getElementById("typeCode"),typeLabel=document.getElementById("typeLabel"),typeColor=document.getElementById("typeColor"),typeList=document.getElementById("typeList");
@@ -826,7 +822,7 @@ function shiftMeta(code){
  return shifts[code]||shifts[""];
 }
 function refreshShiftSelects(){
- ["editA","editB","batchAShift","batchBShift"].forEach(id=>{
+ ["batchAShift","batchBShift"].forEach(id=>{
    const s=document.getElementById(id);
    if(!s)return;
    const old=s.value;
@@ -1081,8 +1077,10 @@ if(numEl){
 function openDay(d){
  if(window.__shiftReadOnly)return;
  const kk=k(d),ds=state.days[kk]||{};
- editDate.value=kk;editA.value=shiftFor(d,"a");editB.value=shiftFor(d,"b");editMC.checked=!!ds.mc;
  holidayEditDate.value=kk;holidayAutoNote.value=ds.suppressAllMarkers?"":baseNotes(d);holidayCustomNote.value=ds.note||"";
+ batchSelectedDates=new Set([kk]);
+ batchDates.value=kk;
+ updateBatchSelectedSummary();
  switchView("settingsView");switchSettingsPage("shiftPage");
 }
 function renderCustomList(){
@@ -1312,26 +1310,40 @@ updateBatchSelectedSummary();
 document.getElementById("applyBatch").addEventListener("click",()=>{
  const dates=parseBatchDates(batchDates.value);
  if(!dates.length){alert("請先按「開啟多選月曆」選擇日期");return;}
- if(!batchAEnabled.checked&&!batchBEnabled.checked){alert("請至少勾選一位要修改的人員");return;}
+ const mcEnabled=document.getElementById("batchMCEnabled").checked;
+ const mcValue=document.getElementById("batchMCValue").value==="on";
+ if(!batchAEnabled.checked&&!batchBEnabled.checked&&!mcEnabled){
+   alert("請至少勾選一項要修改的內容");
+   return;
+ }
  for(const d of dates){
    const obj=ensureDayObj(k(d));
    if(batchAEnabled.checked)obj.aShift=batchAShift.value;
    if(batchBEnabled.checked)obj.bShift=batchBShift.value;
+   if(mcEnabled){
+     if(mcValue)obj.mc=true;
+     else delete obj.mc;
+   }
  }
- persist();render();alert("已批量修改 "+dates.length+" 個日期");
+ persist();render();alert("已修改 "+dates.length+" 個日期");
 });
 document.getElementById("restoreBatch").addEventListener("click",()=>{
  const dates=parseBatchDates(batchDates.value);
  if(!dates.length){alert("請先按「開啟多選月曆」選擇日期");return;}
- if(!batchAEnabled.checked&&!batchBEnabled.checked){alert("請至少勾選一位要恢復的人員");return;}
+ const mcEnabled=document.getElementById("batchMCEnabled").checked;
+ if(!batchAEnabled.checked&&!batchBEnabled.checked&&!mcEnabled){
+   alert("請至少勾選一項要恢復的內容");
+   return;
+ }
  for(const d of dates){
    const kk=k(d),obj=state.days?.[kk];
    if(!obj)continue;
    if(batchAEnabled.checked)delete obj.aShift;
    if(batchBEnabled.checked)delete obj.bShift;
+   if(mcEnabled)delete obj.mc;
    cleanupDayObj(kk);
  }
- persist();render();alert("已恢復 "+dates.length+" 個日期的原本班別");
+ persist();render();alert("已恢復 "+dates.length+" 個日期");
 });
 
 document.getElementById("addType").addEventListener("click",()=>{
@@ -1414,25 +1426,6 @@ document.getElementById("removeGenerated").addEventListener("click",()=>{
  Object.keys(state.generated).filter(kk=>kk.startsWith(y+"-")).forEach(kk=>delete state.generated[kk]);
  persist();render();document.getElementById("holidayResult").textContent="已清除 "+y+" 年自動節日。";
 });
-document.getElementById("saveDay").addEventListener("click",()=>{
- if(!editDate.value){alert("請選日期");return}
- const d=dFromKey(editDate.value),ds={...(state.days[editDate.value]||{})};
- if(editA.value!==baseShift(d,"a"))ds.aShift=editA.value;else delete ds.aShift;
- if(editB.value!==baseShift(d,"b"))ds.bShift=editB.value;else delete ds.bShift;
- if(editMC.checked)ds.mc=true;else delete ds.mc;
- if(Object.keys(ds).length)state.days[editDate.value]=ds;else delete state.days[editDate.value];
- persist();render();alert("已儲存班別");
-});
-document.getElementById("resetDay").addEventListener("click",()=>{
- if(!editDate.value)return;
- const ds={...(state.days[editDate.value]||{})};delete ds.aShift;delete ds.bShift;delete ds.mc;
- if(Object.keys(ds).length)state.days[editDate.value]=ds;else delete state.days[editDate.value];
- const d=dFromKey(editDate.value);editA.value=baseShift(d,"a");editB.value=baseShift(d,"b");editMC.checked=false;persist();render();
-});
-editDate.addEventListener("change",()=>{
- if(!editDate.value)return;
- const d=dFromKey(editDate.value),ds=state.days[editDate.value]||{};editA.value=shiftFor(d,"a");editB.value=shiftFor(d,"b");editMC.checked=!!ds.mc;
-});
 holidayEditDate.addEventListener("change",()=>{
  if(!holidayEditDate.value)return;
  const d=dFromKey(holidayEditDate.value),ds=state.days[holidayEditDate.value]||{};
@@ -1468,8 +1461,6 @@ document.getElementById("clearAllDayMarkers").addEventListener("click",()=>{
  holidayAutoNote.value="";
  persist();render();
 });
-
-editDate.value="2026-08-30";
 holidayEditDate.value="2026-08-30";
 holidayAutoNote.value=baseNotes(dFromKey(holidayEditDate.value));
 holidayCustomNote.value=(state.days[holidayEditDate.value]||{}).note||"";
