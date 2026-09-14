@@ -22,6 +22,13 @@ header{padding:4px 2px 12px}.brand{font-size:22px;font-weight:850}.sub{font-size
 .week,.calendar{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px}.week div{text-align:center;font-size:12px;color:var(--muted);padding:6px 0}
 .day{appearance:none;width:100%;min-height:118px;padding:5px 3px;border:1px solid var(--line);border-radius:11px;background:#fff;text-align:left;color:var(--text);position:relative;overflow:hidden}
 .day.other{opacity:.26}.day.today{outline:2px solid var(--accent);outline-offset:-1px}.num{font-size:12px;font-weight:800;padding-left:2px;color:var(--date-color,inherit)!important}
+.lunarMark{
+  position:absolute;right:4px;top:4px;
+  font-size:8px;font-weight:900;line-height:1;
+  color:#6b7280;letter-spacing:-.2px;
+  pointer-events:none;
+}
+
 .shiftRow{display:grid;grid-template-columns:22px 1fr;align-items:center;gap:2px;margin-top:4px;font-size:11px}
 .mark{text-align:center;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.badge{border-radius:7px;padding:4px 1px;text-align:center;font-weight:850;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .note{margin-top:5px;padding:4px 3px;border-radius:7px;background:#f4f5f7;color:#4b5563;font-size:9px;line-height:1.25;min-height:23px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
@@ -208,6 +215,16 @@ body.readerMode .day{cursor:default}
   background:#111827;color:#fff;border-color:#111827;
 }
 
+
+.typeRow{grid-template-columns:minmax(0,1fr) auto!important;align-items:center;gap:10px}
+.typeInfo{display:flex;align-items:center;gap:8px;min-width:0}
+.typeInfoText{min-width:0;line-height:1.35}
+.typeInfoText .typeLabelText{color:#6b7280;margin-left:6px}
+.typeSwatch{flex:0 0 auto;width:28px;height:22px;border:1px solid #cbd5e1;border-radius:6px}
+.typeActions{display:flex;gap:6px;align-items:center}
+.typeActions .miniBtn{width:auto;min-height:34px;margin:0;padding:6px 10px;border-radius:9px;font-size:12px;font-weight:800}
+#typeCode:disabled{background:#f3f4f6;color:#6b7280}
+
 </style>
 </head>
 <body>
@@ -228,7 +245,7 @@ body.readerMode .day{cursor:default}
     background:#fff;border:1px solid #d1d5db;border-radius:14px;
     box-shadow:0 10px 28px rgba(0,0,0,.18);padding:12px;
   ">
-    <div style="font-size:10px;color:#9ca3af;margin-bottom:5px">版本：V15</div>
+    <div style="font-size:10px;color:#9ca3af;margin-bottom:5px">版本：V16</div>
     <div id="roleBadge">尚未登入</div>
     <div id="firebaseLoginStatus" style="font-weight:700;font-size:14px;margin-bottom:6px">尚未登入雲端</div>
     <div id="firebaseUid" style="font-size:11px;color:#6b7280;word-break:break-all;margin-bottom:10px">
@@ -477,7 +494,7 @@ body.readerMode .day{cursor:default}
     <div class="stack">
       <div class="settingsCard">
         <h3>班別／假別管理</h3>
-        <p class="help">之後有新的假別，不需要再改程式。新增後會自動出現在班別修改選單。</p>
+        <p class="help">可新增班別／假別；已新增項目可直接修改顯示名稱與顏色，修改後會同步套用到班表。</p>
         <div class="yearRow">
           <div>
             <label>代碼</label>
@@ -491,6 +508,7 @@ body.readerMode .day{cursor:default}
         <label>顯示顏色</label>
         <input id="typeColor" type="color" value="#eeeeee">
         <button id="addType" class="btn primary" type="button">新增班別／假別</button>
+        <button id="cancelTypeEdit" class="btn secondary" type="button" style="display:none">取消修改</button>
       </div>
 
       <div class="settingsCard">
@@ -805,6 +823,8 @@ const mcColor=document.getElementById("mcColor");
 const holidayEditDate=document.getElementById("holidayEditDate");
 const holidayAutoNote=document.getElementById("holidayAutoNote"),holidayCustomNote=document.getElementById("holidayCustomNote");
 const typeCode=document.getElementById("typeCode"),typeLabel=document.getElementById("typeLabel"),typeColor=document.getElementById("typeColor"),typeList=document.getElementById("typeList");
+const addTypeBtn=document.getElementById("addType"),cancelTypeEditBtn=document.getElementById("cancelTypeEdit");
+let editingTypeIndex=-1;
 periodStartDay.innerHTML=Array.from({length:31},(_,i)=>'<option value="'+(i+1)+'">'+(i+1)+' 日</option>').join("");
 
 
@@ -836,26 +856,83 @@ function refreshShiftSelects(){
    if([...s.options].some(o=>o.value===old))s.value=old;
  });
 }
+function resetTypeEditor(){
+ editingTypeIndex=-1;
+ typeCode.disabled=false;
+ typeCode.value="";
+ typeLabel.value="";
+ typeColor.value="#eeeeee";
+ addTypeBtn.textContent="新增班別／假別";
+ cancelTypeEditBtn.style.display="none";
+}
+
+function beginTypeEdit(index){
+ const t=getShiftTypes()[index];
+ if(!t)return;
+ editingTypeIndex=index;
+ typeCode.value=t.code||"";
+ typeCode.disabled=true;
+ typeLabel.value=t.label||t.code||"空白";
+ typeColor.value=t.bg||"#eeeeee";
+ addTypeBtn.textContent="儲存修改";
+ cancelTypeEditBtn.style.display="";
+ document.getElementById("typePage")?.scrollIntoView({behavior:"smooth",block:"start"});
+}
+
 function renderTypeList(){
  if(!typeList)return;
  typeList.innerHTML="";
  getShiftTypes().forEach((t,i)=>{
    const r=document.createElement("div");
-   r.className="listRow";
-   const left=document.createElement("span");
-   left.innerHTML="<strong>"+(t.code||"空白")+"</strong>　"+(t.label||"");
+   r.className="listRow typeRow";
+
+   const info=document.createElement("div");
+   info.className="typeInfo";
+
    const sw=document.createElement("span");
-   sw.style.cssText="display:inline-block;width:30px;height:20px;border:1px solid #ccc;border-radius:6px;background:"+(t.bg||"#eee");
-   r.appendChild(left);r.appendChild(sw);
+   sw.className="typeSwatch";
+   sw.style.background=t.bg||"#eee";
+
+   const text=document.createElement("div");
+   text.className="typeInfoText";
+   const codeText=document.createElement("strong");
+   codeText.textContent=t.code||"空白";
+   const labelText=document.createElement("span");
+   labelText.className="typeLabelText";
+   labelText.textContent=t.label||"";
+   text.appendChild(codeText);
+   text.appendChild(labelText);
+
+   info.appendChild(sw);
+   info.appendChild(text);
+
+   const actions=document.createElement("div");
+   actions.className="typeActions";
+
+   const edit=document.createElement("button");
+   edit.type="button";
+   edit.className="btn secondary miniBtn";
+   edit.textContent="修改";
+   edit.addEventListener("click",()=>beginTypeEdit(i));
+   actions.appendChild(edit);
+
    if(t.code!==""){
      const del=document.createElement("button");
-     del.type="button";del.className="btn secondary";del.textContent="刪除";
+     del.type="button";
+     del.className="btn secondary miniBtn";
+     del.textContent="刪除";
      del.addEventListener("click",()=>{
+       if(!confirm("確定要刪除「"+(t.label||t.code)+"」嗎？"))return;
        state.shiftTypes=state.shiftTypes.filter((_,idx)=>idx!==i);
+       if(editingTypeIndex===i)resetTypeEditor();
+       else if(editingTypeIndex>i)editingTypeIndex--;
        persist();refreshShiftSelects();renderTypeList();render();
      });
-     r.appendChild(del);
+     actions.appendChild(del);
    }
+
+   r.appendChild(info);
+   r.appendChild(actions);
    typeList.appendChild(r);
  });
 }
@@ -863,15 +940,18 @@ function daysInMonth(y,m){return new Date(y,m+1,0,12).getDate()}
 function clampStartDay(y,m,day){return Math.min(day,daysInMonth(y,m))}
 function periodRange(){
  const y=cursor.getFullYear(),m=cursor.getMonth(),startDay=parseInt(state.display.periodStartDay,10)||1;
- const actualStart=clampStartDay(y,m,startDay);
- const start=new Date(y,m,actualStart,12);
- let next;
  if(startDay===1){
-   next=new Date(y,m+1,1,12);
- }else{
-   const nm=m+1, ny=y+Math.floor(nm/12), realM=((nm%12)+12)%12;
-   next=new Date(ny,realM,clampStartDay(ny,realM,startDay),12);
+   const start=new Date(y,m,1,12);
+   const next=new Date(y,m+1,1,12);
+   return {start,end:addDays(next,-1),next};
  }
+
+ // 例如初始日為 21 號：
+ // 「9 月份」代表 8/21～9/20，而不是 9/21～10/20。
+ const prev=new Date(y,m-1,1,12);
+ const py=prev.getFullYear(),pm=prev.getMonth();
+ const start=new Date(py,pm,clampStartDay(py,pm,startDay),12);
+ const next=new Date(y,m,clampStartDay(y,m,startDay),12);
  return {start,end:addDays(next,-1),next};
 }
 function calendarCells(){
@@ -1016,6 +1096,25 @@ function holidayVisualType(d,compSet){
   });
  }
 });
+
+let chineseLunarDayFormatter=null;
+try{
+ chineseLunarDayFormatter=new Intl.DateTimeFormat("zh-TW-u-ca-chinese",{day:"numeric"});
+}catch(e){}
+
+function lunarFirstFifteenthLabel(d){
+ if(!chineseLunarDayFormatter)return "";
+ try{
+   const parts=chineseLunarDayFormatter.formatToParts(d);
+   const dayPart=parts.find(p=>p.type==="day");
+   const raw=String(dayPart?.value||chineseLunarDayFormatter.format(d)).trim();
+   const n=parseInt(raw,10);
+   if(n===1 || raw.includes("初一"))return "初一";
+   if(n===15 || raw.includes("十五"))return "十五";
+ }catch(e){}
+ return "";
+}
+
 function render(){
  refreshShiftSelects();
  renderTypeList();
@@ -1034,7 +1133,8 @@ function render(){
    try{a=shiftFor(d,"a");}catch(e){a=baseShift(d,"a");}
    try{b=shiftFor(d,"b");}catch(e){b=baseShift(d,"b");}
    const ab=shiftMeta(a),bb=shiftMeta(b),note=displayNote(d),kk=k(d),mc=!!state.days?.[kk]?.mc,
-         specialNote=state.days?.[kk]?.suppressAllMarkers?"":recurringSpecialNote(d);
+         specialNote=state.days?.[kk]?.suppressAllMarkers?"":recurringSpecialNote(d),
+         lunarLabel=lunarFirstFifteenthLabel(d);
    const btn=document.createElement("button");btn.type="button";
    const hv=holidayVisualType(d,visualCompSet);
  btn.className="day"+((d<pr.start||d>pr.end)?" other":"")+(kk===today?" today":"");
@@ -1054,10 +1154,8 @@ function render(){
    btn.style.backgroundColor=state.display.weekendColor||"#faf0d2";
    btn.style.setProperty("--date-color",state.display.weekendDateColor||"#ff0000");
  }
-   const dayState=state.days[kk]||{};
-   const showCustomDot=dayState.aShift!==undefined||dayState.bShift!==undefined||dayState.mc===true;
    btn.innerHTML='<div class="num">'+d.getDate()+'</div>'+
-     (showCustomDot?'':'')+
+     (lunarLabel?'<div class="lunarMark">'+lunarLabel+'</div>':'')+
      '<div class="shiftRow"><span class="mark">'+(state.people.aIcon||"A")+'</span><span class="badge" style="background:'+ab.bg+';color:'+ab.fg+'">'+(a||"－")+'</span></div>'+
      '<div class="shiftRow"><span class="mark">'+(state.people.bIcon||"B")+'</span><span class="badge" style="background:'+bb.bg+';color:'+bb.fg+'">'+(b||"－")+'</span></div>'+
      '<div class="note">'+([specialNote?"★":"",note,mc?"MC":""].filter(Boolean).join(" · "))+'</div>';
@@ -1132,10 +1230,13 @@ document.getElementById("monthJumpBtn").addEventListener("click",openYmPicker);
 document.getElementById("todayBtn").addEventListener("click",()=>{
  const now=new Date();
  const startDay=parseInt(state.display.periodStartDay,10)||1;
- if(startDay===1 || now.getDate()>=startDay){
+ if(startDay===1){
    cursor=new Date(now.getFullYear(),now.getMonth(),1,12);
  }else{
-   cursor=new Date(now.getFullYear(),now.getMonth()-1,1,12);
+   // 月份以「期間結束所在月份」命名：
+   // 9/1～9/20 屬於 9 月份；9/21 起屬於 10 月份。
+   const offset=now.getDate()>=startDay?1:0;
+   cursor=new Date(now.getFullYear(),now.getMonth()+offset,1,12);
  }
  render();
 });
@@ -1362,15 +1463,29 @@ document.getElementById("restoreBatch").addEventListener("click",()=>{
  persist();render();alert("已恢復 "+dates.length+" 個日期");
 });
 
-document.getElementById("addType").addEventListener("click",()=>{
+addTypeBtn.addEventListener("click",()=>{
+ if(editingTypeIndex>=0){
+   const t=getShiftTypes()[editingTypeIndex];
+   if(!t){resetTypeEditor();return;}
+   const newLabel=typeLabel.value.trim()||t.code||"空白";
+   t.label=newLabel;
+   t.bg=typeColor.value||"#eeeeee";
+   persist();refreshShiftSelects();renderTypeList();render();
+   resetTypeEditor();
+   alert("已修改 "+newLabel);
+   return;
+ }
+
  const code=typeCode.value.trim(),label=typeLabel.value.trim()||code;
  if(!code){alert("請輸入代碼");return;}
  if(getShiftTypes().some(t=>t.code===code)){alert("這個代碼已存在");return;}
  state.shiftTypes.push({code,label,bg:typeColor.value||"#eeeeee",fg:"#333333"});
- typeCode.value="";typeLabel.value="";
+ resetTypeEditor();
  persist();refreshShiftSelects();renderTypeList();render();
  alert("已新增 "+label);
 });
+
+cancelTypeEditBtn.addEventListener("click",resetTypeEditor);
 document.getElementById("saveLogic").addEventListener("click",()=>{
  const aSeq=parseSequenceText(logicASequence.value);
  const bSeq=parseSequenceText(logicBSequence.value);
