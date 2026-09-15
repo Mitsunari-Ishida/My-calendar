@@ -243,7 +243,22 @@ body.readerMode .day{cursor:default}
 .exerciseCalDay .exerciseCalItem:first-of-type{margin-top:17px!important}
 .exerciseCalendarGrid{align-items:stretch}
 @media(max-width:420px){.exerciseCalDay{min-height:72px!important;padding:4px!important}.exerciseCalNum{left:4px!important;top:4px!important}}
-.exerciseBatchButtons{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin:7px 0}.exerciseBatchRow{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(70px,.7fr) minmax(54px,.55fr) 34px;gap:5px;align-items:center;margin:6px 0}.exerciseBatchRow select,.exerciseBatchRow input{margin:0!important;min-width:0}.exerciseBatchRemove{width:34px!important;min-height:36px!important;padding:0!important;margin:0!important;border-radius:9px!important}@media(max-width:420px){.exerciseBatchRow{grid-template-columns:minmax(0,1.3fr) 72px 54px 32px;gap:3px}.exerciseBatchRow select,.exerciseBatchRow input{font-size:11px;padding:7px 4px}}.exerciseDayHead{display:grid;grid-template-columns:1fr auto;gap:8px;align-items:center}.exerciseDayHead h3{margin:0}.exerciseDayEditAll{width:auto!important;min-height:34px!important;margin:0!important;padding:6px 11px!important;font-size:12px!important}</style>
+.exerciseBatchButtons{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin:7px 0}.exerciseBatchRow{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(70px,.7fr) minmax(54px,.55fr) 34px;gap:5px;align-items:center;margin:6px 0}.exerciseBatchRow select,.exerciseBatchRow input{margin:0!important;min-width:0}.exerciseBatchRemove{width:34px!important;min-height:36px!important;padding:0!important;margin:0!important;border-radius:9px!important}@media(max-width:420px){.exerciseBatchRow{grid-template-columns:minmax(0,1.3fr) 72px 54px 32px;gap:3px}.exerciseBatchRow select,.exerciseBatchRow input{font-size:11px;padding:7px 4px}}.exerciseDayHead{display:grid;grid-template-columns:1fr auto;gap:8px;align-items:center}.exerciseDayHead h3{margin:0}.exerciseDayEditAll{width:auto!important;min-height:34px!important;margin:0!important;padding:6px 11px!important;font-size:12px!important}
+/* V25 exercise batch input layout */
+#exerciseInput .exerciseTwo{align-items:end}
+#exerciseInput .exerciseTwo>div{min-width:0}
+#batchExerciseDate,#batchExercisePerson,#batchRoutineSelect,#loadRoutineExercises{
+ box-sizing:border-box!important;width:100%!important;height:42px!important;min-height:42px!important;margin:0!important
+}
+#batchRoutineSelect{padding-top:0!important;padding-bottom:0!important}
+#loadRoutineExercises{display:flex!important;align-items:center!important;justify-content:center!important;padding-top:0!important;padding-bottom:0!important}
+@media(max-width:520px){
+ #exerciseInput .exerciseTwo{grid-template-columns:1fr!important;gap:8px!important}
+ #exerciseInput .exerciseTwo>div{width:100%!important;min-width:0!important}
+ #batchExerciseDate,#batchExercisePerson{display:block!important;width:100%!important;max-width:100%!important}
+ #exerciseInput .exerciseBatchButtons{grid-template-columns:1fr 1fr!important;gap:6px!important;align-items:stretch!important}
+}
+</style>
 </head>
 <body>
 
@@ -263,7 +278,7 @@ body.readerMode .day{cursor:default}
     background:#fff;border:1px solid #d1d5db;border-radius:14px;
     box-shadow:0 10px 28px rgba(0,0,0,.18);padding:12px;
   ">
-    <div style="font-size:10px;color:#9ca3af;margin-bottom:5px">版本：V24</div>
+    <div style="font-size:10px;color:#9ca3af;margin-bottom:5px">版本：V25</div>
     <div id="roleBadge">尚未登入</div>
     <div id="firebaseLoginStatus" style="font-weight:700;font-size:14px;margin-bottom:6px">尚未登入雲端</div>
     <div id="firebaseUid" style="font-size:11px;color:#6b7280;word-break:break-all;margin-bottom:10px">
@@ -309,14 +324,7 @@ body.readerMode .day{cursor:default}
 <label>課表</label><div class="exerciseBatchButtons"><select id="batchRoutineSelect"><option value="">選擇課表</option></select><button id="loadRoutineExercises" class="btn secondary" type="button">帶入課表</button></div>
 <p class="help">帶入後先在下方一次填完各項次數／時間，再按「一次儲存全部」。</p>
 <div id="exerciseBatchRows"></div>
-<div class="exerciseBatchButtons"><button id="addBatchExerciseRow" class="btn secondary" type="button">＋新增一項</button><button id="saveBatchExercises" class="btn primary" type="button">一次儲存全部</button></div>
-</div><div class="settingsCard"><h3 id="exerciseFormTitle">新增運動</h3>
-<label>日期</label><input id="exerciseDate" type="date"><label>人員</label><select id="exercisePerson"><option value="a">A</option><option value="b">B</option></select>
-<label>運動項目</label><select id="exerciseType"></select><div class="exerciseTwo"><div><label>數值</label><input id="exerciseValue" type="number" min="0" step="0.1"></div><div><label>單位</label><input id="exerciseUnit" type="text"></div></div>
-<label>備註</label><input id="exerciseNote" type="text" placeholder="選填">
-<div class="exerciseActionRow"><button id="saveExercise" class="btn primary" type="button">儲存運動紀錄</button><button id="cancelExerciseEdit" class="btn secondary" type="button" style="display:none">取消修改</button></div>
-<button id="copyLastExercise" class="btn secondary" type="button">↩️ 帶入上次運動</button>
-<label>快速課表</label><select id="exerciseRoutineSelect"></select><button id="applyExerciseRoutine" class="btn secondary" type="button">套用課表到今天</button>
+<div class="exerciseBatchButtons"><button id="addBatchExerciseRow" class="btn secondary" type="button">＋新增一項</button><button id="saveBatchExercises" class="btn primary" type="button">儲存</button></div>
 </div></div>
 <div id="exerciseSettings" class="modulePanel"><div class="settingsCard"><h3>運動項目管理</h3><label>名稱</label><input id="exerciseTypeName" type="text"><div class="exerciseTwo"><div><label>圖示</label><input id="exerciseTypeIcon" type="text" placeholder="🚴"></div><div><label>預設單位</label><input id="exerciseTypeUnit" type="text" placeholder="分鐘"></div></div><div class="exerciseActionRow"><button id="addExerciseType" class="btn primary" type="button">新增運動項目</button><button id="cancelExerciseTypeEdit" class="btn secondary" type="button" style="display:none">取消修改</button></div><div id="exerciseTypeList"></div></div><div class="settingsCard"><h3>運動課表管理</h3><label>課表名稱</label><input id="routineName" type="text" placeholder="例如：A 組"><p class="help">勾選這個課表要包含的運動項目。</p><div id="routineTypeChecks" class="routineChecks"></div><button id="saveRoutine" class="btn primary" type="button">新增課表</button><div id="routineList"></div></div></div>
 </div></section>
@@ -1278,7 +1286,7 @@ function renderExerciseCalendar(){
 }
 function renderExerciseDay(){
  const box=document.getElementById("exerciseDayList");if(!box)return;const who=exerciseOverviewPerson==="a"?(state.people.aName||"A"):(state.people.bName||"B");exerciseDayTitleEl.textContent=exerciseOverviewSelected+" · "+who;const rows=(state.exercises||[]).filter(x=>x.date===exerciseOverviewSelected&&x.person===exerciseOverviewPerson);box.innerHTML="";if(!rows.length){box.innerHTML="<div class='exerciseDayEmpty'>這一天沒有運動紀錄</div>";return}rows.forEach(rec=>{const t=exType(rec.typeId),r=document.createElement("div");r.className="exerciseDayRecord";const x=document.createElement("div");x.innerHTML="<strong>"+(t.icon||"🏃")+" "+t.name+"　"+rec.value+(rec.unit||"")+"</strong>"+(rec.note?"<div class='exerciseMeta'>"+rec.note+"</div>":"");const a=document.createElement("div");a.className="exerciseDayActions";const ed=document.createElement("button");ed.className="btn secondary exerciseMini";ed.textContent="修改";ed.onclick=()=>openBatchDayEditor(rec.date,rec.person);const del=document.createElement("button");del.className="btn secondary exerciseMini";del.textContent="刪除";del.onclick=()=>{if(confirm("刪除這筆紀錄？")){state.exercises=state.exercises.filter(z=>z.id!==rec.id);persist();renderExercise();render()}};a.append(ed,del);r.append(x,a);box.appendChild(r)})}
-function renderExercise(){const ps=exercisePerson;ps.options[0].textContent=state.people.aName||"A";ps.options[1].textContent=state.people.bName||"B";refreshExTypes();renderExTypeList();renderRoutineList();renderExerciseCalendar()}
+function renderExercise(){refreshExTypes();renderExTypeList();renderRoutineList();refreshBatchExerciseUI();renderExerciseCalendar()}
 function renderRoutineChecks(){const b=document.getElementById("routineTypeChecks");if(!b)return;b.innerHTML="";(state.exerciseTypes||[]).forEach(t=>{const l=document.createElement("label");l.className="routineCheck";l.innerHTML='<input type="checkbox" value="'+t.id+'"><span>'+(t.icon||"🏃")+' '+t.name+'</span>';b.appendChild(l)})}
 function refreshRoutineSelect(){refreshBatchExerciseUI();const s=document.getElementById("exerciseRoutineSelect");if(!s)return;s.innerHTML='<option value="">選擇課表</option>';(state.exerciseRoutines||[]).forEach(r=>{const o=document.createElement("option");o.value=r.id;o.textContent=r.name;s.appendChild(o)})}
 function renderRoutineList(){const b=document.getElementById("routineList");if(!b)return;b.innerHTML="";(state.exerciseRoutines||[]).forEach((r,i)=>{const row=document.createElement("div");row.className="routineItem";const names=r.typeIds.map(id=>exType(id).name).join("、");const x=document.createElement("div");x.innerHTML="<strong>"+r.name+"</strong><div class='exerciseMeta'>"+names+"</div>";const d=document.createElement("button");d.className="btn secondary exerciseMini";d.textContent="刪除";d.onclick=()=>{state.exerciseRoutines.splice(i,1);persist();renderRoutineList();refreshRoutineSelect()};row.append(x,d);b.appendChild(row)})}
@@ -1295,7 +1303,7 @@ function switchSettingsPage(id){
  document.querySelectorAll(".settingsTab").forEach(b=>b.classList.toggle("active",b.dataset.settingsPage===id));
  window.scrollTo({top:0,behavior:"smooth"});
 }
-document.querySelectorAll(".navBtn").forEach(b=>b.addEventListener("click",()=>switchView(b.dataset.target)));
+document.querySelectorAll(".navBtn").forEach(b=>b.addEventListener("click",()=>{const target=b.dataset.target;switchView(target);if(target==="calendarView")switchModuleTab("calendar","calendarMain");if(target==="exerciseView")switchModuleTab("exercise","exerciseOverview")}));
 document.querySelectorAll(".settingsTab").forEach(b=>b.addEventListener("click",()=>switchSettingsPage(b.dataset.settingsPage)));
 document.querySelector(".prev").addEventListener("click",()=>{cursor.setMonth(cursor.getMonth()-1);render()});
 document.querySelector(".next").addEventListener("click",()=>{cursor.setMonth(cursor.getMonth()+1);render()});
@@ -1701,19 +1709,9 @@ calendarFontEl.addEventListener("change",()=>{
  render();
 });
 
-const exM=document.getElementById("exerciseMonth"),exD=document.getElementById("exerciseDate"),exS=document.getElementById("exerciseType"),
+const exM=document.getElementById("exerciseMonth"),
 exerciseCalPrevEl=document.getElementById("exerciseCalPrev"),exerciseCalNextEl=document.getElementById("exerciseCalNext"),
-exerciseCalTitleEl=document.getElementById("exerciseCalTitle"),exerciseDayTitleEl=document.getElementById("exerciseDayTitle");{const n=new Date();if(exM)exM.value=n.getFullYear()+"-"+String(n.getMonth()+1).padStart(2,"0");if(exD)exD.value=k(n)}refreshExTypes();
-exM?.addEventListener("change",renderExercise);exS.addEventListener("change",()=>exerciseUnit.value=exType(exS.value).unit||"");document.getElementById("exerciseTrendType")?.addEventListener("change",renderTrend);cancelExerciseEdit.addEventListener("click",resetExerciseEditor);copyLastExercise.addEventListener("click",copyLastExercises);
-exerciseCalPrevEl.addEventListener("click",()=>{exerciseOverviewCursor=new Date(exerciseOverviewCursor.getFullYear(),exerciseOverviewCursor.getMonth()-1,1,12);renderExerciseCalendar()});
-exerciseCalNextEl.addEventListener("click",()=>{exerciseOverviewCursor=new Date(exerciseOverviewCursor.getFullYear(),exerciseOverviewCursor.getMonth()+1,1,12);renderExerciseCalendar()});
-exerciseCalTitleEl.addEventListener("click",()=>{const n=new Date();exerciseOverviewCursor=new Date(n.getFullYear(),n.getMonth(),1,12);exerciseOverviewSelected=k(n);renderExerciseCalendar()});
-
-document.querySelectorAll(".exercisePersonBtn").forEach(b=>b.addEventListener("click",()=>{exerciseOverviewPerson=b.dataset.exPerson;renderExerciseCalendar()}));
-editExerciseDayAll.addEventListener("click",()=>openBatchDayEditor(exerciseOverviewSelected,exerciseOverviewPerson));
-
-applyExerciseRoutine.addEventListener("click",applyRoutine);
-saveExercise.addEventListener("click",()=>{const date=exD.value,typeId=exS.value,value=exerciseValue.value,unit=exerciseUnit.value.trim(),note=exerciseNote.value.trim(),person=exercisePerson.value;if(!date||!typeId){alert("請選擇日期與運動項目");return}if(value===""&&!note){alert("請輸入數值或備註");return}if(editingExerciseId){const r=state.exercises.find(x=>x.id===editingExerciseId);if(r)Object.assign(r,{date,person,typeId,value:Number(value)||0,unit,note});resetExerciseEditor()}else state.exercises.push({id:"ex_"+Date.now(),date,person,typeId,value:Number(value)||0,unit,note});exM.value=date.slice(0,7);persist();renderExercise();render()});
+exerciseCalTitleEl=document.getElementById("exerciseCalTitle"),exerciseDayTitleEl=document.getElementById("exerciseDayTitle");{const n=new Date();if(exM)exM.value=n.getFullYear()+"-"+String(n.getMonth()+1).padStart(2,"0");}refreshExTypes();
 addExerciseType.addEventListener("click",()=>{const name=exerciseTypeName.value.trim(),icon=exerciseTypeIcon.value.trim()||"🏃",unit=exerciseTypeUnit.value.trim();if(!name){alert("請輸入運動名稱");return}if(editingExerciseTypeIndex>=0){Object.assign(state.exerciseTypes[editingExerciseTypeIndex],{name,icon,unit});resetExerciseTypeEditor()}else state.exerciseTypes.push({id:"et_"+Date.now(),name,icon,unit});persist();refreshExTypes();renderExTypeList();renderExercise()});cancelExerciseTypeEdit.addEventListener("click",resetExerciseTypeEditor);
 saveRoutine.addEventListener("click",()=>{const name=routineName.value.trim(),typeIds=[...routineTypeChecks.querySelectorAll("input:checked")].map(x=>x.value);if(!name||!typeIds.length){alert("請輸入課表名稱並至少勾選一個運動");return}state.exerciseRoutines.push({id:"rt_"+Date.now(),name,typeIds});routineName.value="";routineTypeChecks.querySelectorAll("input").forEach(x=>x.checked=false);persist();renderRoutineList();refreshRoutineSelect()});
 let batchExerciseSourceDate=null;
