@@ -285,6 +285,20 @@ body.readerMode .day{cursor:default}
 #prevMonth::before,#prevBtn::before,#exerciseCalPrev::before{content:"‹";font-size:28px;font-weight:800;line-height:1;transform:translateY(-1px)}
 #nextMonth::before,#nextBtn::before,#exerciseCalNext::before{content:"›";font-size:28px;font-weight:800;line-height:1;transform:translateY(-1px)}
 #prevMonth:active,#nextMonth:active,#prevBtn:active,#nextBtn:active,#exerciseCalPrev:active,#exerciseCalNext:active{transform:scale(.94);box-shadow:0 1px 4px rgba(15,23,42,.12)!important}
+
+/* V27 */
+#calendarSettings.modulePanel.active{display:block!important}
+.exerciseOverviewTop{display:grid!important;grid-template-columns:42px minmax(0,1fr) 42px!important;align-items:center!important;gap:8px!important}
+#exerciseCalPrev,#exerciseCalNext{justify-self:center!important;width:38px!important;height:38px!important;min-width:38px!important;min-height:38px!important;padding:0!important;margin:0!important;border-radius:50%!important;background:#fff!important;border:1px solid #dbe3ea!important;box-shadow:0 2px 8px rgba(15,23,42,.06)!important;display:flex!important;align-items:center!important;justify-content:center!important;font-size:0!important;line-height:1!important}
+#exerciseCalPrev::before{content:"‹";font-size:27px;font-weight:800;line-height:1}
+#exerciseCalNext::before{content:"›";font-size:27px;font-weight:800;line-height:1}
+#exerciseCalTitle{justify-self:center!important;text-align:center!important}
+#calendarView .toolbar{display:grid!important;grid-template-columns:42px minmax(0,1fr) 42px!important;align-items:center!important;gap:8px!important}
+#calendarView .toolbar>button:first-child,#calendarView .toolbar>button:last-child{position:static!important;justify-self:center!important;width:38px!important;height:38px!important;min-width:38px!important;min-height:38px!important;padding:0!important;margin:0!important;border-radius:50%!important;display:flex!important;align-items:center!important;justify-content:center!important}
+#calendarView,#exerciseOverview{background:#f7f5ef!important}
+#exerciseOverview>.settingsCard:first-child{background:#fffdf8!important;border:1px solid #e9e2d5!important;border-radius:18px!important;box-shadow:0 2px 10px rgba(90,74,45,.05)!important}
+.exerciseCalendarGrid{gap:5px!important}.exerciseCalDay{background:#fffdfa!important;border:1px solid #ece5d8!important;border-radius:11px!important;box-shadow:0 1px 3px rgba(90,74,45,.035)!important}
+.exerciseCalDay:not(.other):has(.exerciseCalItem){background:#f3eee3!important;border-color:#ddd2bd!important}.exerciseCalDay.selected{outline:2px solid #64748b!important;outline-offset:-2px!important;background:#f0ece3!important}
 </style>
 </head>
 <body>
@@ -305,7 +319,7 @@ body.readerMode .day{cursor:default}
     background:#fff;border:1px solid #d1d5db;border-radius:14px;
     box-shadow:0 10px 28px rgba(0,0,0,.18);padding:12px;
   ">
-    <div style="font-size:10px;color:#9ca3af;margin-bottom:5px">版本：V26</div>
+    <div style="font-size:10px;color:#9ca3af;margin-bottom:5px">版本：V27</div>
     <div id="roleBadge">尚未登入</div>
     <div id="firebaseLoginStatus" style="font-weight:700;font-size:14px;margin-bottom:6px">尚未登入雲端</div>
     <div id="firebaseUid" style="font-size:11px;color:#6b7280;word-break:break-all;margin-bottom:10px">
@@ -333,7 +347,7 @@ body.readerMode .day{cursor:default}
     <div id="weekHeader" class="week"></div>
     <div id="calendar" class="calendar"></div>
   </div>
-<section id="calendarSettings" class="modulePanel">
+<div id="calendarSettings" class="modulePanel">
   <div class="settingsTabs">
     <button class="settingsTab active" type="button" data-settings-page="peoplePage">名稱顯示</button>
     <button class="settingsTab" type="button" data-settings-page="holidayPage">節日標記</button>
@@ -576,7 +590,7 @@ body.readerMode .day{cursor:default}
     </div>
   </div>
 
-</section></section>
+</div></section>
 
 <section id="exerciseView" class="view"><div class="exerciseWrap">
 <div class="moduleTabs exerciseModuleTabs"><button class="moduleTab active" data-ex-tab="exerciseOverview" type="button">總覽</button><button class="moduleTab" data-ex-tab="exerciseInput" type="button">紀錄輸入</button><button class="moduleTab" data-ex-tab="exerciseSettings" type="button">設定</button></div>
@@ -1738,7 +1752,11 @@ calendarFontEl.addEventListener("change",()=>{
 
 const exM=document.getElementById("exerciseMonth"),
 exerciseCalPrevEl=document.getElementById("exerciseCalPrev"),exerciseCalNextEl=document.getElementById("exerciseCalNext"),
-exerciseCalTitleEl=document.getElementById("exerciseCalTitle"),exerciseDayTitleEl=document.getElementById("exerciseDayTitle");{const n=new Date();if(exM)exM.value=n.getFullYear()+"-"+String(n.getMonth()+1).padStart(2,"0");}refreshExTypes();
+exerciseCalTitleEl=document.getElementById("exerciseCalTitle"),exerciseDayTitleEl=document.getElementById("exerciseDayTitle");
+if(exerciseCalPrevEl)exerciseCalPrevEl.onclick=()=>{exerciseOverviewCursor=new Date(exerciseOverviewCursor.getFullYear(),exerciseOverviewCursor.getMonth()-1,1,12);renderExerciseCalendar()};
+if(exerciseCalNextEl)exerciseCalNextEl.onclick=()=>{exerciseOverviewCursor=new Date(exerciseOverviewCursor.getFullYear(),exerciseOverviewCursor.getMonth()+1,1,12);renderExerciseCalendar()};
+if(exerciseCalTitleEl)exerciseCalTitleEl.onclick=()=>{const n=new Date();exerciseOverviewCursor=new Date(n.getFullYear(),n.getMonth(),1,12);exerciseOverviewSelected=k(n);renderExerciseCalendar()};
+{const n=new Date();if(exM)exM.value=n.getFullYear()+"-"+String(n.getMonth()+1).padStart(2,"0");}refreshExTypes();
 addExerciseType.addEventListener("click",()=>{const name=exerciseTypeName.value.trim(),icon=exerciseTypeIcon.value.trim()||"🏃",unit=exerciseTypeUnit.value.trim();if(!name){alert("請輸入運動名稱");return}if(editingExerciseTypeIndex>=0){Object.assign(state.exerciseTypes[editingExerciseTypeIndex],{name,icon,unit});resetExerciseTypeEditor()}else state.exerciseTypes.push({id:"et_"+Date.now(),name,icon,unit});persist();refreshExTypes();renderExTypeList();renderExercise()});cancelExerciseTypeEdit.addEventListener("click",resetExerciseTypeEditor);
 saveRoutine.addEventListener("click",()=>{const name=routineName.value.trim(),typeIds=[...routineTypeChecks.querySelectorAll("input:checked")].map(x=>x.value);if(!name||!typeIds.length){alert("請輸入課表名稱並至少勾選一個運動");return}state.exerciseRoutines.push({id:"rt_"+Date.now(),name,typeIds});routineName.value="";routineTypeChecks.querySelectorAll("input").forEach(x=>x.checked=false);persist();renderRoutineList();refreshRoutineSelect()});
 let batchExerciseSourceDate=null;
