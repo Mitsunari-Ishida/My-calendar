@@ -299,6 +299,25 @@ body.readerMode .day{cursor:default}
 #exerciseOverview>.settingsCard:first-child{background:#fffdf8!important;border:1px solid #e9e2d5!important;border-radius:18px!important;box-shadow:0 2px 10px rgba(90,74,45,.05)!important}
 .exerciseCalendarGrid{gap:5px!important}.exerciseCalDay{background:#fffdfa!important;border:1px solid #ece5d8!important;border-radius:11px!important;box-shadow:0 1px 3px rgba(90,74,45,.035)!important}
 .exerciseCalDay:not(.other):has(.exerciseCalItem){background:#f3eee3!important;border-color:#ddd2bd!important}.exerciseCalDay.selected{outline:2px solid #64748b!important;outline-offset:-2px!important;background:#f0ece3!important}
+
+/* V28 unified exercise palette */
+#exerciseView{background:#f4f1e9!important}
+#exerciseView .exerciseWrap{background:#f4f1e9!important}
+#exerciseView .moduleTabs{background:#f4f1e9!important}
+#exerciseView .moduleTab{background:#fffdf8!important;border-color:#ded7ca!important;color:#746b5e!important}
+#exerciseView .moduleTab.active{background:#3f3a33!important;color:#fff!important;border-color:#3f3a33!important}
+#exerciseView .modulePanel{background:#f4f1e9!important}
+#exerciseView .settingsCard{background:#fffdf8!important;border-color:#e6dfd2!important;box-shadow:0 2px 9px rgba(90,74,45,.045)!important}
+#exerciseView input,#exerciseView select,#exerciseView textarea{background:#fffdfa!important;border-color:#ddd5c8!important}
+#exerciseView .btn.secondary{background:#eee9df!important;border-color:#e2dbcf!important;color:#332f29!important}
+#exerciseView .btn.primary,#exerciseView #saveBatchExercises{background:#3f3a33!important;color:#fff!important;border-color:#3f3a33!important}
+#exerciseView .exerciseDayRecord,#exerciseView .exerciseTypeItem,#exerciseView .routineItem{background:#faf7f0!important;border-color:#e5ddcf!important}
+#exerciseDayList{background:transparent!important}
+#exerciseOverview>.settingsCard:nth-child(2){background:#fffdf8!important}
+.exercisePersonBtn{background:#fffdf8!important;border-color:#ddd5c8!important;color:#746b5e!important}
+.exercisePersonBtn.active{background:#3f3a33!important;color:#fff!important;border-color:#3f3a33!important}
+.exerciseBatchRow{background:#f8f4ec!important;border-radius:10px;padding:5px}
+.exerciseMeta,.help,.exerciseDayEmpty{color:#8b8172!important}
 </style>
 </head>
 <body>
@@ -319,7 +338,7 @@ body.readerMode .day{cursor:default}
     background:#fff;border:1px solid #d1d5db;border-radius:14px;
     box-shadow:0 10px 28px rgba(0,0,0,.18);padding:12px;
   ">
-    <div style="font-size:10px;color:#9ca3af;margin-bottom:5px">版本：V27</div>
+    <div style="font-size:10px;color:#9ca3af;margin-bottom:5px">版本：V28</div>
     <div id="roleBadge">尚未登入</div>
     <div id="firebaseLoginStatus" style="font-weight:700;font-size:14px;margin-bottom:6px">尚未登入雲端</div>
     <div id="firebaseUid" style="font-size:11px;color:#6b7280;word-break:break-all;margin-bottom:10px">
@@ -347,8 +366,7 @@ body.readerMode .day{cursor:default}
     <div id="weekHeader" class="week"></div>
     <div id="calendar" class="calendar"></div>
   </div>
-<div id="calendarSettings" class="modulePanel">
-  <div class="settingsTabs">
+<div id="calendarSettings" class="modulePanel"><div class="settingsTabs">
     <button class="settingsTab active" type="button" data-settings-page="peoplePage">名稱顯示</button>
     <button class="settingsTab" type="button" data-settings-page="holidayPage">節日標記</button>
     <button class="settingsTab" type="button" data-settings-page="shiftPage">班別修改</button>
@@ -590,8 +608,7 @@ body.readerMode .day{cursor:default}
     </div>
   </div>
 
-</div></section>
-
+</div>
 <section id="exerciseView" class="view"><div class="exerciseWrap">
 <div class="moduleTabs exerciseModuleTabs"><button class="moduleTab active" data-ex-tab="exerciseOverview" type="button">總覽</button><button class="moduleTab" data-ex-tab="exerciseInput" type="button">紀錄輸入</button><button class="moduleTab" data-ex-tab="exerciseSettings" type="button">設定</button></div>
 <div id="exerciseOverview" class="modulePanel active">
@@ -1333,7 +1350,7 @@ function refreshRoutineSelect(){refreshBatchExerciseUI();const s=document.getEle
 function renderRoutineList(){const b=document.getElementById("routineList");if(!b)return;b.innerHTML="";(state.exerciseRoutines||[]).forEach((r,i)=>{const row=document.createElement("div");row.className="routineItem";const names=r.typeIds.map(id=>exType(id).name).join("、");const x=document.createElement("div");x.innerHTML="<strong>"+r.name+"</strong><div class='exerciseMeta'>"+names+"</div>";const d=document.createElement("button");d.className="btn secondary exerciseMini";d.textContent="刪除";d.onclick=()=>{state.exerciseRoutines.splice(i,1);persist();renderRoutineList();refreshRoutineSelect()};row.append(x,d);b.appendChild(row)})}
 function copyLastExercises(){const person=exercisePerson.value,date=exerciseDate.value,dates=[...new Set((state.exercises||[]).filter(x=>x.person===person&&x.date<date).map(x=>x.date))].sort().reverse();if(!dates.length){alert("找不到上次運動紀錄");return}const last=dates[0],rows=state.exercises.filter(x=>x.person===person&&x.date===last);rows.forEach((x,i)=>state.exercises.push({...x,id:"ex_"+Date.now()+"_"+i,date}));persist();exerciseMonth.value=date.slice(0,7);renderExercise();render();alert("已帶入 "+last+" 的 "+rows.length+" 筆運動")}
 function applyRoutine(){const r=(state.exerciseRoutines||[]).find(x=>x.id===exerciseRoutineSelect.value);if(!r){alert("請先選擇課表");return}const date=exerciseDate.value,person=exercisePerson.value;r.typeIds.forEach((id,i)=>{const t=exType(id);state.exercises.push({id:"ex_"+Date.now()+"_"+i,date,person,typeId:id,value:0,unit:t.unit||"",note:""})});persist();exerciseMonth.value=date.slice(0,7);renderExercise();render();alert("已加入「"+r.name+"」，請再修改各項數值")}
-function switchView(id){document.querySelectorAll(".view").forEach(v=>v.classList.remove("active"));if(id==="exerciseView")setTimeout(renderExercise,0);
+function switchView(id){const csPanel=document.getElementById("calendarSettings");if(csPanel&&id!=="calendarView"){csPanel.classList.remove("active");csPanel.style.display="none";}document.querySelectorAll(".view").forEach(v=>v.classList.remove("active"));if(id==="exerciseView")setTimeout(renderExercise,0);
  if(window.__shiftReadOnly && id==="settingsView")id="calendarView";
  document.querySelectorAll(".view").forEach(v=>v.classList.toggle("active",v.id===id));
  document.querySelectorAll(".navBtn").forEach(b=>b.classList.toggle("active",b.dataset.target===id));
@@ -1756,6 +1773,8 @@ exerciseCalTitleEl=document.getElementById("exerciseCalTitle"),exerciseDayTitleE
 if(exerciseCalPrevEl)exerciseCalPrevEl.onclick=()=>{exerciseOverviewCursor=new Date(exerciseOverviewCursor.getFullYear(),exerciseOverviewCursor.getMonth()-1,1,12);renderExerciseCalendar()};
 if(exerciseCalNextEl)exerciseCalNextEl.onclick=()=>{exerciseOverviewCursor=new Date(exerciseOverviewCursor.getFullYear(),exerciseOverviewCursor.getMonth()+1,1,12);renderExerciseCalendar()};
 if(exerciseCalTitleEl)exerciseCalTitleEl.onclick=()=>{const n=new Date();exerciseOverviewCursor=new Date(n.getFullYear(),n.getMonth(),1,12);exerciseOverviewSelected=k(n);renderExerciseCalendar()};
+document.querySelectorAll(".exercisePersonBtn").forEach(b=>{b.onclick=()=>{exerciseOverviewPerson=b.dataset.exPerson;renderExerciseCalendar();};});
+
 {const n=new Date();if(exM)exM.value=n.getFullYear()+"-"+String(n.getMonth()+1).padStart(2,"0");}refreshExTypes();
 addExerciseType.addEventListener("click",()=>{const name=exerciseTypeName.value.trim(),icon=exerciseTypeIcon.value.trim()||"🏃",unit=exerciseTypeUnit.value.trim();if(!name){alert("請輸入運動名稱");return}if(editingExerciseTypeIndex>=0){Object.assign(state.exerciseTypes[editingExerciseTypeIndex],{name,icon,unit});resetExerciseTypeEditor()}else state.exerciseTypes.push({id:"et_"+Date.now(),name,icon,unit});persist();refreshExTypes();renderExTypeList();renderExercise()});cancelExerciseTypeEdit.addEventListener("click",resetExerciseTypeEditor);
 saveRoutine.addEventListener("click",()=>{const name=routineName.value.trim(),typeIds=[...routineTypeChecks.querySelectorAll("input:checked")].map(x=>x.value);if(!name||!typeIds.length){alert("請輸入課表名稱並至少勾選一個運動");return}state.exerciseRoutines.push({id:"rt_"+Date.now(),name,typeIds});routineName.value="";routineTypeChecks.querySelectorAll("input").forEach(x=>x.checked=false);persist();renderRoutineList();refreshRoutineSelect()});
@@ -1806,7 +1825,7 @@ function switchModuleTab(group,target){
  const attr=group==="calendar"?"data-calendar-tab":"data-ex-tab";
  document.querySelectorAll("["+attr+"]").forEach(b=>b.classList.toggle("active",b.getAttribute(attr)===target));
  const ids=group==="calendar"?["calendarMain","calendarSettings"]:["exerciseOverview","exerciseInput","exerciseSettings"];
- ids.forEach(id=>document.getElementById(id)?.classList.toggle("active",id===target));
+ ids.forEach(id=>{const el=document.getElementById(id);if(el){el.classList.toggle("active",id===target);el.style.display=(id===target)?"block":"none";}});
  if(target==="exerciseOverview")renderExercise();
 }
 document.querySelectorAll("[data-calendar-tab]").forEach(b=>b.addEventListener("click",()=>{if(window.__shiftReadOnly&&b.dataset.calendarTab==="calendarSettings")return;switchModuleTab("calendar",b.dataset.calendarTab)}));
