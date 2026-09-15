@@ -258,6 +258,33 @@ body.readerMode .day{cursor:default}
  #batchExerciseDate,#batchExercisePerson{display:block!important;width:100%!important;max-width:100%!important}
  #exerciseInput .exerciseBatchButtons{grid-template-columns:1fr 1fr!important;gap:6px!important;align-items:stretch!important}
 }
+
+/* V26 fixes */
+#exerciseInput .exerciseTwo{display:grid!important;grid-template-columns:minmax(0,1fr) minmax(0,1fr)!important;gap:10px!important;width:100%!important}
+#exerciseInput .exerciseTwo>div{min-width:0!important;max-width:100%!important;overflow:hidden!important}
+#batchExerciseDate,#batchExercisePerson{
+ display:block!important;box-sizing:border-box!important;width:100%!important;max-width:100%!important;min-width:0!important;
+ height:auto!important;min-height:42px!important;margin:0!important;padding:9px 10px!important
+}
+#batchExerciseDate{-webkit-appearance:none!important;appearance:none!important}
+#batchExerciseDate::-webkit-date-and-time-value{text-align:left!important;min-width:0!important}
+@media(max-width:520px){
+ #exerciseInput .exerciseTwo{grid-template-columns:1fr!important;gap:8px!important}
+}
+/* Ensure inactive module panels never leak into another main view */
+#calendarSettings.modulePanel:not(.active),#calendarMain.modulePanel:not(.active),
+#exerciseOverview.modulePanel:not(.active),#exerciseInput.modulePanel:not(.active),#exerciseSettings.modulePanel:not(.active){display:none!important}
+.view:not(.active){display:none!important}
+/* Cleaner month arrows */
+#prevMonth,#nextMonth,#prevBtn,#nextBtn,#exerciseCalPrev,#exerciseCalNext{
+ width:40px!important;height:40px!important;min-width:40px!important;min-height:40px!important;
+ border:1px solid #e2e8f0!important;border-radius:12px!important;background:linear-gradient(#fff,#f8fafc)!important;
+ box-shadow:0 3px 10px rgba(15,23,42,.10)!important;color:#111827!important;font-size:0!important;
+ display:inline-flex!important;align-items:center!important;justify-content:center!important;padding:0!important
+}
+#prevMonth::before,#prevBtn::before,#exerciseCalPrev::before{content:"‹";font-size:28px;font-weight:800;line-height:1;transform:translateY(-1px)}
+#nextMonth::before,#nextBtn::before,#exerciseCalNext::before{content:"›";font-size:28px;font-weight:800;line-height:1;transform:translateY(-1px)}
+#prevMonth:active,#nextMonth:active,#prevBtn:active,#nextBtn:active,#exerciseCalPrev:active,#exerciseCalNext:active{transform:scale(.94);box-shadow:0 1px 4px rgba(15,23,42,.12)!important}
 </style>
 </head>
 <body>
@@ -278,7 +305,7 @@ body.readerMode .day{cursor:default}
     background:#fff;border:1px solid #d1d5db;border-radius:14px;
     box-shadow:0 10px 28px rgba(0,0,0,.18);padding:12px;
   ">
-    <div style="font-size:10px;color:#9ca3af;margin-bottom:5px">版本：V25</div>
+    <div style="font-size:10px;color:#9ca3af;margin-bottom:5px">版本：V26</div>
     <div id="roleBadge">尚未登入</div>
     <div id="firebaseLoginStatus" style="font-weight:700;font-size:14px;margin-bottom:6px">尚未登入雲端</div>
     <div id="firebaseUid" style="font-size:11px;color:#6b7280;word-break:break-all;margin-bottom:10px">
@@ -306,28 +333,6 @@ body.readerMode .day{cursor:default}
     <div id="weekHeader" class="week"></div>
     <div id="calendar" class="calendar"></div>
   </div>
-</section>
-
-<section id="exerciseView" class="view"><div class="exerciseWrap">
-<div class="moduleTabs exerciseModuleTabs"><button class="moduleTab active" data-ex-tab="exerciseOverview" type="button">總覽</button><button class="moduleTab" data-ex-tab="exerciseInput" type="button">紀錄輸入</button><button class="moduleTab" data-ex-tab="exerciseSettings" type="button">設定</button></div>
-<div id="exerciseOverview" class="modulePanel active">
-<div class="settingsCard"><div class="exerciseOverviewTop"><button id="exerciseCalPrev" class="btn secondary exerciseCalNav" type="button" aria-label="上個月">‹</button><strong id="exerciseCalTitle"></strong><button id="exerciseCalNext" class="btn secondary exerciseCalNav" type="button" aria-label="下個月">›</button></div>
-<div class="exercisePersonToggle"><button class="exercisePersonBtn active" data-ex-person="a" type="button">A</button><button class="exercisePersonBtn" data-ex-person="b" type="button">B</button></div>
-<div class="exerciseWeekHead"><span>日</span><span>一</span><span>二</span><span>三</span><span>四</span><span>五</span><span>六</span></div><div id="exerciseCalendarGrid" class="exerciseCalendarGrid"></div></div>
-<div class="settingsCard"><div class="exerciseDayHead"><h3 id="exerciseDayTitle">當日運動紀錄</h3><button id="editExerciseDayAll" class="btn secondary exerciseDayEditAll" type="button">整天修改</button></div><div id="exerciseDayList"></div></div>
-</div>
-<div id="exerciseInput" class="modulePanel"><input id="exerciseMonth" type="month" hidden aria-hidden="true">
-<div class="settingsCard">
-<h3 id="batchExerciseTitle">快速輸入／多筆修改</h3>
-<div class="exerciseTwo"><div><label>日期</label><input id="batchExerciseDate" type="date"></div><div><label>人員</label><select id="batchExercisePerson"><option value="a">A</option><option value="b">B</option></select></div></div>
-<div class="exerciseBatchButtons"><button id="loadDayExercises" class="btn secondary" type="button">載入當日紀錄</button><button id="loadLastExercises" class="btn secondary" type="button">帶入上次運動</button></div>
-<label>課表</label><div class="exerciseBatchButtons"><select id="batchRoutineSelect"><option value="">選擇課表</option></select><button id="loadRoutineExercises" class="btn secondary" type="button">帶入課表</button></div>
-<p class="help">帶入後先在下方一次填完各項次數／時間，再按「一次儲存全部」。</p>
-<div id="exerciseBatchRows"></div>
-<div class="exerciseBatchButtons"><button id="addBatchExerciseRow" class="btn secondary" type="button">＋新增一項</button><button id="saveBatchExercises" class="btn primary" type="button">儲存</button></div>
-</div></div>
-<div id="exerciseSettings" class="modulePanel"><div class="settingsCard"><h3>運動項目管理</h3><label>名稱</label><input id="exerciseTypeName" type="text"><div class="exerciseTwo"><div><label>圖示</label><input id="exerciseTypeIcon" type="text" placeholder="🚴"></div><div><label>預設單位</label><input id="exerciseTypeUnit" type="text" placeholder="分鐘"></div></div><div class="exerciseActionRow"><button id="addExerciseType" class="btn primary" type="button">新增運動項目</button><button id="cancelExerciseTypeEdit" class="btn secondary" type="button" style="display:none">取消修改</button></div><div id="exerciseTypeList"></div></div><div class="settingsCard"><h3>運動課表管理</h3><label>課表名稱</label><input id="routineName" type="text" placeholder="例如：A 組"><p class="help">勾選這個課表要包含的運動項目。</p><div id="routineTypeChecks" class="routineChecks"></div><button id="saveRoutine" class="btn primary" type="button">新增課表</button><div id="routineList"></div></div></div>
-</div></section>
 <section id="calendarSettings" class="modulePanel">
   <div class="settingsTabs">
     <button class="settingsTab active" type="button" data-settings-page="peoplePage">名稱顯示</button>
@@ -571,7 +576,29 @@ body.readerMode .day{cursor:default}
     </div>
   </div>
 
-</section>
+</section></section>
+
+<section id="exerciseView" class="view"><div class="exerciseWrap">
+<div class="moduleTabs exerciseModuleTabs"><button class="moduleTab active" data-ex-tab="exerciseOverview" type="button">總覽</button><button class="moduleTab" data-ex-tab="exerciseInput" type="button">紀錄輸入</button><button class="moduleTab" data-ex-tab="exerciseSettings" type="button">設定</button></div>
+<div id="exerciseOverview" class="modulePanel active">
+<div class="settingsCard"><div class="exerciseOverviewTop"><button id="exerciseCalPrev" class="btn secondary exerciseCalNav" type="button" aria-label="上個月">‹</button><strong id="exerciseCalTitle"></strong><button id="exerciseCalNext" class="btn secondary exerciseCalNav" type="button" aria-label="下個月">›</button></div>
+<div class="exercisePersonToggle"><button class="exercisePersonBtn active" data-ex-person="a" type="button">A</button><button class="exercisePersonBtn" data-ex-person="b" type="button">B</button></div>
+<div class="exerciseWeekHead"><span>日</span><span>一</span><span>二</span><span>三</span><span>四</span><span>五</span><span>六</span></div><div id="exerciseCalendarGrid" class="exerciseCalendarGrid"></div></div>
+<div class="settingsCard"><div class="exerciseDayHead"><h3 id="exerciseDayTitle">當日運動紀錄</h3><button id="editExerciseDayAll" class="btn secondary exerciseDayEditAll" type="button">整天修改</button></div><div id="exerciseDayList"></div></div>
+</div>
+<div id="exerciseInput" class="modulePanel"><input id="exerciseMonth" type="month" hidden aria-hidden="true">
+<div class="settingsCard">
+<h3 id="batchExerciseTitle">快速輸入／多筆修改</h3>
+<div class="exerciseTwo"><div><label>日期</label><input id="batchExerciseDate" type="date"></div><div><label>人員</label><select id="batchExercisePerson"><option value="a">A</option><option value="b">B</option></select></div></div>
+<div class="exerciseBatchButtons"><button id="loadDayExercises" class="btn secondary" type="button">載入當日紀錄</button><button id="loadLastExercises" class="btn secondary" type="button">帶入上次運動</button></div>
+<label>課表</label><div class="exerciseBatchButtons"><select id="batchRoutineSelect"><option value="">選擇課表</option></select><button id="loadRoutineExercises" class="btn secondary" type="button">帶入課表</button></div>
+<p class="help">帶入後先在下方一次填完各項次數／時間，再按「一次儲存全部」。</p>
+<div id="exerciseBatchRows"></div>
+<div class="exerciseBatchButtons"><button id="addBatchExerciseRow" class="btn secondary" type="button">＋新增一項</button><button id="saveBatchExercises" class="btn primary" type="button">儲存</button></div>
+</div></div>
+<div id="exerciseSettings" class="modulePanel"><div class="settingsCard"><h3>運動項目管理</h3><label>名稱</label><input id="exerciseTypeName" type="text"><div class="exerciseTwo"><div><label>圖示</label><input id="exerciseTypeIcon" type="text" placeholder="🚴"></div><div><label>預設單位</label><input id="exerciseTypeUnit" type="text" placeholder="分鐘"></div></div><div class="exerciseActionRow"><button id="addExerciseType" class="btn primary" type="button">新增運動項目</button><button id="cancelExerciseTypeEdit" class="btn secondary" type="button" style="display:none">取消修改</button></div><div id="exerciseTypeList"></div></div><div class="settingsCard"><h3>運動課表管理</h3><label>課表名稱</label><input id="routineName" type="text" placeholder="例如：A 組"><p class="help">勾選這個課表要包含的運動項目。</p><div id="routineTypeChecks" class="routineChecks"></div><button id="saveRoutine" class="btn primary" type="button">新增課表</button><div id="routineList"></div></div></div>
+</div></section>
+
 
       
 
@@ -1292,7 +1319,7 @@ function refreshRoutineSelect(){refreshBatchExerciseUI();const s=document.getEle
 function renderRoutineList(){const b=document.getElementById("routineList");if(!b)return;b.innerHTML="";(state.exerciseRoutines||[]).forEach((r,i)=>{const row=document.createElement("div");row.className="routineItem";const names=r.typeIds.map(id=>exType(id).name).join("、");const x=document.createElement("div");x.innerHTML="<strong>"+r.name+"</strong><div class='exerciseMeta'>"+names+"</div>";const d=document.createElement("button");d.className="btn secondary exerciseMini";d.textContent="刪除";d.onclick=()=>{state.exerciseRoutines.splice(i,1);persist();renderRoutineList();refreshRoutineSelect()};row.append(x,d);b.appendChild(row)})}
 function copyLastExercises(){const person=exercisePerson.value,date=exerciseDate.value,dates=[...new Set((state.exercises||[]).filter(x=>x.person===person&&x.date<date).map(x=>x.date))].sort().reverse();if(!dates.length){alert("找不到上次運動紀錄");return}const last=dates[0],rows=state.exercises.filter(x=>x.person===person&&x.date===last);rows.forEach((x,i)=>state.exercises.push({...x,id:"ex_"+Date.now()+"_"+i,date}));persist();exerciseMonth.value=date.slice(0,7);renderExercise();render();alert("已帶入 "+last+" 的 "+rows.length+" 筆運動")}
 function applyRoutine(){const r=(state.exerciseRoutines||[]).find(x=>x.id===exerciseRoutineSelect.value);if(!r){alert("請先選擇課表");return}const date=exerciseDate.value,person=exercisePerson.value;r.typeIds.forEach((id,i)=>{const t=exType(id);state.exercises.push({id:"ex_"+Date.now()+"_"+i,date,person,typeId:id,value:0,unit:t.unit||"",note:""})});persist();exerciseMonth.value=date.slice(0,7);renderExercise();render();alert("已加入「"+r.name+"」，請再修改各項數值")}
-function switchView(id){if(id==="exerciseView")setTimeout(renderExercise,0);
+function switchView(id){document.querySelectorAll(".view").forEach(v=>v.classList.remove("active"));if(id==="exerciseView")setTimeout(renderExercise,0);
  if(window.__shiftReadOnly && id==="settingsView")id="calendarView";
  document.querySelectorAll(".view").forEach(v=>v.classList.toggle("active",v.id===id));
  document.querySelectorAll(".navBtn").forEach(b=>b.classList.toggle("active",b.dataset.target===id));
