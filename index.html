@@ -275,7 +275,21 @@ body.readerMode .day{cursor:default}
 #exerciseView .btn.secondary{background:#eee9df!important;border-color:#e2dbcf!important}
 .exerciseCalDay{background:#fffdfa!important;border-color:#ece5d8!important}
 .exerciseCalDay:not(.other):has(.exerciseCalItem){background:#f3eee3!important;border-color:#ddd2bd!important}
-.exerciseCalMore{font-weight:800!important;opacity:.72}</style>
+.exerciseCalMore{font-weight:800!important;opacity:.72}
+/* V31 iPhone date input fix */
+#exerciseInput .exerciseTwo{display:grid!important;grid-template-columns:minmax(0,1fr) minmax(0,1fr)!important;gap:10px!important;width:100%!important}
+#exerciseInput .exerciseTwo>div{width:100%!important;min-width:0!important;max-width:100%!important;overflow:hidden!important}
+#batchExerciseDate,#batchExercisePerson{box-sizing:border-box!important;width:100%!important;max-width:100%!important;min-width:0!important;margin:0!important}
+#batchExerciseDate{display:block!important;height:44px!important;min-height:44px!important;padding:0 12px!important;font-size:16px!important;line-height:44px!important;-webkit-appearance:none!important;appearance:none!important;overflow:hidden!important}
+#batchExerciseDate::-webkit-date-and-time-value{min-width:0!important;width:100%!important;text-align:left!important;margin:0!important;padding:0!important}
+#batchExerciseDate::-webkit-datetime-edit{min-width:0!important;width:100%!important;padding:0!important}
+#batchExercisePerson{height:44px!important;min-height:44px!important}
+@media(max-width:520px){
+ #exerciseInput .exerciseTwo{grid-template-columns:minmax(0,1fr)!important;gap:8px!important}
+ #exerciseInput .exerciseTwo>div{width:100%!important;min-width:0!important;max-width:100%!important;overflow:hidden!important}
+ #batchExerciseDate,#batchExercisePerson{width:100%!important;max-width:100%!important;min-width:0!important}
+}
+</style>
 </head>
 <body>
 
@@ -295,7 +309,7 @@ body.readerMode .day{cursor:default}
     background:#fff;border:1px solid #d1d5db;border-radius:14px;
     box-shadow:0 10px 28px rgba(0,0,0,.18);padding:12px;
   ">
-    <div style="font-size:10px;color:#9ca3af;margin-bottom:5px">版本：V30</div>
+    <div style="font-size:10px;color:#9ca3af;margin-bottom:5px">版本：V31</div>
     <div id="roleBadge">尚未登入</div>
     <div id="firebaseLoginStatus" style="font-weight:700;font-size:14px;margin-bottom:6px">尚未登入雲端</div>
     <div id="firebaseUid" style="font-size:11px;color:#6b7280;word-break:break-all;margin-bottom:10px">
@@ -339,7 +353,7 @@ body.readerMode .day{cursor:default}
 <div class="exerciseTwo"><div><label>日期</label><input id="batchExerciseDate" type="date"></div><div><label>人員</label><select id="batchExercisePerson"><option value="a">A</option><option value="b">B</option></select></div></div>
 <div class="exerciseBatchButtons"><button id="loadDayExercises" class="btn secondary" type="button">載入當日紀錄</button><button id="loadLastExercises" class="btn secondary" type="button">帶入上次運動</button></div>
 <label>課表</label><div class="exerciseBatchButtons"><select id="batchRoutineSelect"><option value="">選擇課表</option></select><button id="loadRoutineExercises" class="btn secondary" type="button">帶入課表</button></div>
-<p class="help">帶入後先在下方一次填完各項次數／時間，再按「一次儲存全部」。</p>
+
 <div id="exerciseBatchRows"></div>
 <div class="exerciseBatchButtons"><button id="addBatchExerciseRow" class="btn secondary" type="button">＋新增一項</button><button id="saveBatchExercises" class="btn primary" type="button">儲存</button></div>
 </div></div>
