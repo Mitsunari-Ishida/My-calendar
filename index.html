@@ -330,7 +330,7 @@ body.readerMode .exerciseModuleTabs,body.guestMode .exerciseModuleTabs{grid-temp
 #exerciseOverview .exerciseCalDay.selected .exerciseCalNum{width:28px!important;height:28px!important;margin:0!important;background:#3f3a33!important;color:#fff!important}
 #exerciseOverview .exerciseCalDay.today:not(.selected) .exerciseCalNum{outline:1.5px solid #8b8174!important;outline-offset:-2px!important}
 .exercisePictogram{display:inline-flex;align-items:center;justify-content:center;width:30px;height:30px;border-radius:9px;overflow:hidden;flex:0 0 30px;margin-right:7px;vertical-align:middle;box-shadow:0 1px 3px rgba(0,0,0,.08)}
-.exercisePictogram svg{display:block;width:30px;height:30px}
+.exercisePictogram img{display:block;width:30px;height:30px;object-fit:cover}
 .exerciseStatName,.exerciseDayRecord strong{display:flex;align-items:center}
 </style>
 </head>
@@ -352,7 +352,7 @@ body.readerMode .exerciseModuleTabs,body.guestMode .exerciseModuleTabs{grid-temp
     background:#fff;border:1px solid #d1d5db;border-radius:14px;
     box-shadow:0 10px 28px rgba(0,0,0,.18);padding:12px;
   ">
-    <div style="font-size:10px;color:#9ca3af;margin-bottom:5px">版本：V38</div>
+    <div style="font-size:10px;color:#9ca3af;margin-bottom:5px">版本：V39</div>
     <div id="roleBadge">尚未登入</div>
     <div id="firebaseLoginStatus" style="font-weight:700;font-size:14px;margin-bottom:6px">尚未登入雲端</div>
     <div id="firebaseUid" style="font-size:11px;color:#6b7280;word-break:break-all;margin-bottom:10px">
@@ -735,7 +735,9 @@ try{
 if(!Array.isArray(state.exerciseTypes)||!state.exerciseTypes.length)state.exerciseTypes=[{id:"bike",name:"騎腳踏車",icon:"🚴",unit:"分鐘"},{id:"squat",name:"深蹲",icon:"🏋️",unit:"下"},{id:"plank",name:"平板支撐",icon:"⏱️",unit:"秒"},{id:"walk",name:"大步走",icon:"🚶",unit:"步"},{id:"calf_raise",name:"墊腳尖",icon:"🦶",unit:"下"},{id:"under_clap",name:"胯下擊掌",icon:"👏",unit:"下"},{id:"jumping_jack",name:"開合跳",icon:"🤸",unit:"下"}];if(!Array.isArray(state.exercises))state.exercises=[];const exerciseDefaultsV18=[{id:"calf_raise",name:"墊腳尖",icon:"🦶",unit:"下"},{id:"under_clap",name:"胯下擊掌",icon:"👏",unit:"下"},{id:"jumping_jack",name:"開合跳",icon:"🤸",unit:"下"}];exerciseDefaultsV18.forEach(t=>{if(!state.exerciseTypes.some(x=>x.id===t.id||x.name===t.name))state.exerciseTypes.push({...t});});
 // V38：補齊新版運動項目，既有資料不覆蓋
 const exerciseDefaultsV38=[{id:"russian_twist",name:"俄羅斯轉體",icon:"↔️",unit:"下"},{id:"mountain_climber",name:"登山者",icon:"🧗",unit:"下"}];exerciseDefaultsV38.forEach(t=>{if(!state.exerciseTypes.some(x=>x.id===t.id||x.name===t.name))state.exerciseTypes.push({...t});});
-const calfV38=state.exerciseTypes.find(x=>x.id==="calf_raise");if(calfV38&&calfV38.name==="墊腳尖")calfV38.name="踮腳尖";
+const calfV38=state.exerciseTypes.find(x=>x.id==="calf_raise");if(calfV38&&(calfV38.name==="墊腳尖"||calfV38.name==="踮腳尖"))calfV38.name="踮腳尖";
+const walkV39=state.exerciseTypes.find(x=>x.id==="walk");if(walkV39)walkV39.name="大步走";
+const kneeV39=state.exerciseTypes.find(x=>x.id==="side_knee"||x.id==="knee_raise"||x.name==="側提膝"||x.name==="左右提膝");if(kneeV39){kneeV39.name="左右提膝";if(!kneeV39.id)kneeV39.id="knee_raise";}
 if(!Array.isArray(state.exerciseRoutines))state.exerciseRoutines=[];
 const persist=()=>{
   const json=JSON.stringify(state);
@@ -1360,24 +1362,17 @@ function monthRows(month){return(state.exercises||[]).filter(x=>(x.date||"").sta
 function renderTrend(){const b=document.getElementById("exerciseTrend"),typeId=exerciseTrendType.value,rows=(state.exercises||[]).filter(x=>x.typeId===typeId).sort((a,b)=>a.date.localeCompare(b.date)).slice(-12);b.innerHTML="";if(!rows.length){b.innerHTML="<div class='exerciseEmpty'>尚無這個項目的紀錄</div>";return}const max=Math.max(...rows.map(x=>Number(x.value)||0),1);rows.forEach(x=>{const r=document.createElement("div");r.className="trendRow";r.innerHTML="<span>"+x.date.slice(5)+"</span><div class='trendBarWrap'><div class='trendBar' style='width:"+Math.max(2,(Number(x.value)||0)/max*100)+"%'></div></div><strong>"+x.value+(x.unit||"")+"</strong>";b.appendChild(r)})}
 let exerciseOverviewPerson="a",exerciseOverviewCursor=new Date(new Date().getFullYear(),new Date().getMonth(),1,12),exerciseOverviewSelected=k(new Date());
 let exerciseStatsPerson="a",exerciseStatsCursor=new Date(new Date().getFullYear(),new Date().getMonth(),1,12);
-function exerciseIconSVG(t){
- const id=(t&&t.id)||"", bg={squat:"#8b42f4",under_clap:"#ff8611",walk:"#16b765",calf_raise:"#ff3c83",side_knee:"#168ff0",knee_raise:"#168ff0",plank:"#ff3438",bike:"#ffbd16",russian_twist:"#22bbb5",jumping_jack:"#8150ee",mountain_climber:"#ff7b17"}[id]||"#718096";
- const H='<circle cx="32" cy="15" r="5" fill="white"/>', S='stroke="white" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" fill="none"';
- let body='';
- if(id==="squat") body=`${H}<path ${S} d="M29 21l-8 8 6 7-6 12M35 21l8 8-6 7 6 12M22 29h20"/>`;
- else if(id==="under_clap") body=`${H}<path ${S} d="M30 21l-4 11 8 6M34 21l7 9-7 8M26 32l-10 7M41 30l9 8M29 39l5 0"/>`;
- else if(id==="walk") body=`${H}<path ${S} d="M31 21l-2 13-10 13M30 34l12 11M30 25l-10 8M32 25l10 6"/>`;
- else if(id==="calf_raise") body=`${H}<path ${S} d="M32 21v20M32 27l-7 7M32 27l7 7M32 41l-5 7M32 41l5 7"/><path ${S} d="M47 45v-14m0 0-5 6m5-6 5 6"/>`;
- else if(id==="plank") body=`<circle cx="49" cy="23" r="5" fill="white"/><path ${S} d="M44 27L27 31 12 36M27 31l9 8h15M13 36l-3 8M51 39l4 5"/>`;
- else if(id==="bike") body=`<circle cx="18" cy="43" r="10" ${S}/><circle cx="48" cy="43" r="10" ${S}/>${H}<path ${S} d="M30 22l-7 11 12 10 8-16M23 33h20M35 43H18l8-14"/>`;
- else if(id==="russian_twist") body=`${H}<path ${S} d="M31 22l-7 13 10 6M24 35l-10 9M34 41l12 3M24 28l15 7"/><path ${S} d="M12 28c-5 4-5 10 0 14M52 28c5 4 5 10 0 14"/>`;
- else if(id==="jumping_jack") body=`${H}<path ${S} d="M32 21v17M32 26L20 15M32 26l12-11M32 38L20 51M32 38l12 13"/>`;
- else if(id==="mountain_climber") body=`<circle cx="49" cy="20" r="5" fill="white"/><path ${S} d="M44 24L31 31 17 34M31 31l-7 13M31 31l14 10M17 34l-8 10M45 41l10 3"/>`;
- else if(id==="side_knee"||id==="knee_raise") body=`${H}<path ${S} d="M32 21v17M32 27l-8 7M32 27l8 6M32 38l-7 11M32 38l10-6 7 8"/><path ${S} d="M12 39c3 7 7 10 13 11M52 39c-3 7-7 10-13 11"/>`;
- else body=`${H}<path ${S} d="M32 21v18M32 27l-9 7M32 27l9 7M32 39l-8 12M32 39l8 12"/>`;
- return `<svg viewBox="0 0 64 64" role="img" aria-label="${(t&&t.name)||'運動'}"><rect width="64" height="64" rx="15" fill="${bg}"/>${body}</svg>`;
+function exerciseIconAsset(t){
+ const id=(t&&t.id)||"", name=(t&&t.name)||"";
+ const byId={squat:"squat",under_clap:"under_clap",walk:"walk",calf_raise:"calf_raise",side_knee:"knee_raise",knee_raise:"knee_raise",plank:"plank",bike:"bike",russian_twist:"russian_twist",jumping_jack:"jumping_jack",mountain_climber:"mountain_climber"};
+ const byName={"深蹲":"squat","胯下擊掌":"under_clap","大步走":"walk","原地大步走路":"walk","墊腳尖":"calf_raise","踮腳尖":"calf_raise","側提膝":"knee_raise","左右提膝":"knee_raise","平板支撐":"plank","騎腳踏車":"bike","俄羅斯轉體":"russian_twist","開合跳":"jumping_jack","登山者":"mountain_climber"};
+ return byId[id]||byName[name]||"";
 }
-function exercisePictogram(t){return '<span class="exercisePictogram" aria-hidden="true">'+exerciseIconSVG(t)+'</span>'}
+function exercisePictogram(t){
+ const key=exerciseIconAsset(t);
+ if(key)return '<span class="exercisePictogram" aria-hidden="true"><img src="icons/exercise/'+key+'.webp" alt=""></span>';
+ return '<span class="exercisePictogram" aria-hidden="true">'+((t&&t.icon)||"🏃")+'</span>';
+}
 function renderExerciseMonthSummary(){
  const st=document.getElementById("exerciseStatsTitle");if(st)st.textContent=exerciseStatsCursor.getFullYear()+"年 "+(exerciseStatsCursor.getMonth()+1)+"月";
  document.querySelectorAll(".exerciseStatsPersonBtn").forEach(b=>{b.classList.toggle("active",b.dataset.statsPerson===exerciseStatsPerson);b.textContent=b.dataset.statsPerson==="a"?(state.people.aName||"A"):(state.people.bName||"B")});
