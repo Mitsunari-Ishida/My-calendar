@@ -301,6 +301,27 @@ body.guestMode #editExerciseDayAll,
 body.guestMode .exerciseDayActions{display:none!important}
 body.guestMode .calendarModuleTabs,
 body.guestMode #exerciseView .moduleTabs{grid-template-columns:1fr!important}
+
+/* V35 exercise dashboard */
+.exerciseSummaryCards{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:10px 0}
+.exerciseSummaryCard{background:#fffdf8;border:1px solid #e6dfd2;border-radius:14px;padding:14px;text-align:center;box-shadow:0 2px 8px rgba(0,0,0,.035)}
+.exerciseSummaryCard span{display:block;font-size:12px;color:#746b5e;font-weight:800;margin-bottom:5px}.exerciseSummaryCard strong{display:block;font-size:22px}.exerciseSummaryCard small{display:block;color:#8b8174;margin-top:3px}
+.exerciseStatsCard h3{margin:0 0 8px}.exerciseMonthStats{display:grid}.exerciseStatRow{display:grid;grid-template-columns:minmax(0,1.4fr) 1fr .8fr .8fr;gap:6px;align-items:center;padding:9px 2px;border-top:1px solid #eee7db;font-size:12px}.exerciseStatRow:first-child{border-top:0}.exerciseStatName{font-weight:900;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.exerciseStatVal,.exerciseStatDays,.exerciseStatAvg{text-align:right}.exerciseStatHead{color:#8b8174;font-size:10px;font-weight:800}
+.exerciseCalDay{min-height:58px!important;display:flex;flex-direction:column;align-items:center!important;padding:5px 2px!important}.exerciseCalNum{font-size:12px!important;margin:0 0 8px!important}.exerciseCalDots{display:flex;gap:3px;flex-wrap:wrap;justify-content:center;max-width:36px}.exerciseCalDot{width:6px;height:6px;border-radius:50%;background:#8b8174}.exerciseCalDot:nth-child(2n){opacity:.72}.exerciseCalDot:nth-child(3n){opacity:.48}.exerciseCalMoreDots{font-size:8px;color:#8b8174;line-height:6px}.exerciseCalDay:not(.other):has(.exerciseCalDots){background:#f8f4ec!important}.exerciseCalDay.selected .exerciseCalNum{background:#3f3a33;color:#fff;border-radius:50%;width:25px;height:25px;display:flex;align-items:center;justify-content:center;margin-top:-2px!important;margin-bottom:5px!important}.exerciseCalDay .exerciseCalItem{display:none!important}
+@media(max-width:420px){.exerciseStatRow{grid-template-columns:minmax(0,1.25fr) 1fr .72fr .72fr;font-size:11px}.exerciseSummaryCard{padding:12px 8px}}
+
+/* V36 exercise calendar / statistics split */
+.exerciseModuleTabs{grid-template-columns:repeat(4,minmax(0,1fr))!important}
+.exerciseStatsTop{display:grid;grid-template-columns:42px minmax(0,1fr) 42px;align-items:center;gap:8px}
+.exerciseStatsTop strong{text-align:center;font-size:18px}
+#exerciseOverview .settingsCard{padding:10px!important}
+#exerciseOverview .exerciseCalDay{min-height:54px!important}
+body.readerMode .exerciseModuleTabs,body.guestMode .exerciseModuleTabs{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+@media(max-width:520px){
+ .exerciseModuleTabs{grid-template-columns:repeat(4,minmax(0,1fr))!important;gap:5px!important}
+ .exerciseModuleTabs .moduleTab{font-size:12px!important;padding:8px 2px!important}
+ body.readerMode .exerciseModuleTabs,body.guestMode .exerciseModuleTabs{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+}
 </style>
 </head>
 <body>
@@ -321,7 +342,7 @@ body.guestMode #exerciseView .moduleTabs{grid-template-columns:1fr!important}
     background:#fff;border:1px solid #d1d5db;border-radius:14px;
     box-shadow:0 10px 28px rgba(0,0,0,.18);padding:12px;
   ">
-    <div style="font-size:10px;color:#9ca3af;margin-bottom:5px">版本：V34</div>
+    <div style="font-size:10px;color:#9ca3af;margin-bottom:5px">版本：V36</div>
     <div id="roleBadge">尚未登入</div>
     <div id="firebaseLoginStatus" style="font-weight:700;font-size:14px;margin-bottom:6px">尚未登入雲端</div>
     <div id="firebaseUid" style="font-size:11px;color:#6b7280;word-break:break-all;margin-bottom:10px">
@@ -352,12 +373,18 @@ body.guestMode #exerciseView .moduleTabs{grid-template-columns:1fr!important}
 </section>
 
 <section id="exerciseView" class="view"><div class="exerciseWrap">
-<div class="moduleTabs exerciseModuleTabs"><button class="moduleTab active" data-ex-tab="exerciseOverview" type="button">總覽</button><button class="moduleTab" data-ex-tab="exerciseInput" type="button">紀錄輸入</button><button class="moduleTab" data-ex-tab="exerciseSettings" type="button">設定</button></div>
+<div class="moduleTabs exerciseModuleTabs"><button class="moduleTab active" data-ex-tab="exerciseOverview" type="button">月曆</button><button class="moduleTab" data-ex-tab="exerciseStatistics" type="button">統計</button><button class="moduleTab" data-ex-tab="exerciseInput" type="button">紀錄輸入</button><button class="moduleTab" data-ex-tab="exerciseSettings" type="button">設定</button></div>
 <div id="exerciseOverview" class="modulePanel active">
-<div class="settingsCard"><div class="exerciseOverviewTop"><button id="exerciseCalPrev" class="btn secondary exerciseCalNav" type="button" aria-label="上個月">‹</button><strong id="exerciseCalTitle"></strong><button id="exerciseCalNext" class="btn secondary exerciseCalNav" type="button" aria-label="下個月">›</button></div>
 <div class="exercisePersonToggle"><button class="exercisePersonBtn active" data-ex-person="a" type="button">A</button><button class="exercisePersonBtn" data-ex-person="b" type="button">B</button></div>
+<div class="settingsCard"><div class="exerciseOverviewTop"><button id="exerciseCalPrev" class="btn secondary exerciseCalNav" type="button" aria-label="上個月">‹</button><strong id="exerciseCalTitle"></strong><button id="exerciseCalNext" class="btn secondary exerciseCalNav" type="button" aria-label="下個月">›</button></div>
 <div class="exerciseWeekHead"><span>日</span><span>一</span><span>二</span><span>三</span><span>四</span><span>五</span><span>六</span></div><div id="exerciseCalendarGrid" class="exerciseCalendarGrid"></div></div>
 <div class="settingsCard"><div class="exerciseDayHead"><h3 id="exerciseDayTitle">當日運動紀錄</h3><button id="editExerciseDayAll" class="btn secondary exerciseDayEditAll" type="button">整天修改</button></div><div id="exerciseDayList"></div></div>
+</div>
+<div id="exerciseStatistics" class="modulePanel">
+<div class="exercisePersonToggle"><button class="exerciseStatsPersonBtn exercisePersonBtn active" data-stats-person="a" type="button">A</button><button class="exerciseStatsPersonBtn exercisePersonBtn" data-stats-person="b" type="button">B</button></div>
+<div class="settingsCard"><div class="exerciseStatsTop"><button id="exerciseStatsPrev" class="btn secondary exerciseCalNav" type="button">‹</button><strong id="exerciseStatsTitle"></strong><button id="exerciseStatsNext" class="btn secondary exerciseCalNav" type="button">›</button></div>
+<div class="exerciseSummaryCards"><div class="exerciseSummaryCard"><span>本月運動</span><strong id="exerciseMonthDays">0 天</strong></div><div class="exerciseSummaryCard"><span>比上個月</span><strong id="exerciseMonthCompare">—</strong><small id="exercisePrevDays"></small></div></div></div>
+<div class="settingsCard exerciseStatsCard"><h3>各項運動統計</h3><div id="exerciseMonthStats" class="exerciseMonthStats"></div></div>
 </div>
 <div id="exerciseInput" class="modulePanel"><input id="exerciseMonth" type="month" hidden aria-hidden="true">
 <div class="settingsCard">
@@ -1319,13 +1346,29 @@ function editExercise(rec){editingExerciseId=rec.id;exerciseDate.value=rec.date;
 function monthRows(month){return(state.exercises||[]).filter(x=>(x.date||"").startsWith(month))}
 function renderTrend(){const b=document.getElementById("exerciseTrend"),typeId=exerciseTrendType.value,rows=(state.exercises||[]).filter(x=>x.typeId===typeId).sort((a,b)=>a.date.localeCompare(b.date)).slice(-12);b.innerHTML="";if(!rows.length){b.innerHTML="<div class='exerciseEmpty'>尚無這個項目的紀錄</div>";return}const max=Math.max(...rows.map(x=>Number(x.value)||0),1);rows.forEach(x=>{const r=document.createElement("div");r.className="trendRow";r.innerHTML="<span>"+x.date.slice(5)+"</span><div class='trendBarWrap'><div class='trendBar' style='width:"+Math.max(2,(Number(x.value)||0)/max*100)+"%'></div></div><strong>"+x.value+(x.unit||"")+"</strong>";b.appendChild(r)})}
 let exerciseOverviewPerson="a",exerciseOverviewCursor=new Date(new Date().getFullYear(),new Date().getMonth(),1,12),exerciseOverviewSelected=k(new Date());
+let exerciseStatsPerson="a",exerciseStatsCursor=new Date(new Date().getFullYear(),new Date().getMonth(),1,12);
+function renderExerciseMonthSummary(){
+ const st=document.getElementById("exerciseStatsTitle");if(st)st.textContent=exerciseStatsCursor.getFullYear()+"年 "+(exerciseStatsCursor.getMonth()+1)+"月";
+ document.querySelectorAll(".exerciseStatsPersonBtn").forEach(b=>{b.classList.toggle("active",b.dataset.statsPerson===exerciseStatsPerson);b.textContent=b.dataset.statsPerson==="a"?(state.people.aName||"A"):(state.people.bName||"B")});
+ const y=exerciseStatsCursor.getFullYear(),m=exerciseStatsCursor.getMonth(),prefix=y+"-"+String(m+1).padStart(2,"0"),prev=new Date(y,m-1,1,12),prevPrefix=prev.getFullYear()+"-"+String(prev.getMonth()+1).padStart(2,"0");
+ const rows=(state.exercises||[]).filter(x=>x.person===exerciseStatsPerson&&(x.date||"").startsWith(prefix));
+ const prevRows=(state.exercises||[]).filter(x=>x.person===exerciseStatsPerson&&(x.date||"").startsWith(prevPrefix));
+ const days=new Set(rows.map(x=>x.date)).size,prevDays=new Set(prevRows.map(x=>x.date)).size,diff=days-prevDays;
+ document.getElementById("exerciseMonthDays").textContent=days+" 天";
+ document.getElementById("exerciseMonthCompare").textContent=(diff>0?"+":"")+diff+" 天 "+(diff>0?"↑":diff<0?"↓":"－");
+ document.getElementById("exercisePrevDays").textContent="上個月 "+prevDays+" 天";
+ const box=document.getElementById("exerciseMonthStats");box.innerHTML='<div class="exerciseStatRow exerciseStatHead"><span>運動項目</span><span class="exerciseStatVal">本月累計</span><span class="exerciseStatDays">天數</span><span class="exerciseStatAvg">日均</span></div>';
+ const groups=new Map();rows.forEach(x=>{const key=x.typeId+"|"+(x.unit||"");if(!groups.has(key))groups.set(key,{typeId:x.typeId,unit:x.unit||"",total:0,dates:new Set()});const g=groups.get(key);g.total+=Number(x.value)||0;g.dates.add(x.date)});
+ if(!groups.size){box.innerHTML+='<div class="exerciseDayEmpty">本月尚無運動紀錄</div>';return}
+ [...groups.values()].forEach(g=>{const t=exType(g.typeId),days=g.dates.size,avg=days?Math.round(g.total/days):0;const r=document.createElement("div");r.className="exerciseStatRow";r.innerHTML='<span class="exerciseStatName">'+(t.icon||"🏃")+' '+t.name+'</span><strong class="exerciseStatVal">'+g.total.toLocaleString()+g.unit+'</strong><span class="exerciseStatDays">'+days+'天</span><span class="exerciseStatAvg">'+avg+g.unit+'</span>';box.appendChild(r)})
+}
 function renderExerciseCalendar(){
  const grid=document.getElementById("exerciseCalendarGrid");if(!grid)return;
  const y=exerciseOverviewCursor.getFullYear(),m=exerciseOverviewCursor.getMonth(),first=new Date(y,m,1,12),start=new Date(y,m,1-first.getDay(),12);
  exerciseCalTitleEl.textContent=y+"年 "+(m+1)+"月";
  document.querySelectorAll(".exercisePersonBtn").forEach(b=>{b.classList.toggle("active",b.dataset.exPerson===exerciseOverviewPerson);b.textContent=b.dataset.exPerson==="a"?(state.people.aName||"A"):(state.people.bName||"B")});
  grid.innerHTML="";
- for(let i=0;i<42;i++){const d=new Date(start);d.setDate(start.getDate()+i);const kk=k(d),rows=(state.exercises||[]).filter(x=>x.date===kk&&x.person===exerciseOverviewPerson),b=document.createElement("button");b.type="button";b.className="exerciseCalDay"+(d.getMonth()!==m?" other":"")+(kk===k(new Date())?" today":"")+(kk===exerciseOverviewSelected?" selected":"");let items=rows.slice(0,3).map(x=>{const t=exType(x.typeId);return "<div class='exerciseCalItem'>"+(t.icon||"🏃")+" "+t.name+(x.value?" "+x.value+(x.unit||""):"")+"</div>"}).join("");b.innerHTML="<div class='exerciseCalNum'>"+d.getDate()+"</div>"+items+(rows.length>3?"<div class='exerciseCalItem exerciseCalMore'>＋"+(rows.length-3)+"項</div>":"");b.onclick=()=>{const alreadySelected=(kk===exerciseOverviewSelected);exerciseOverviewSelected=kk;if(d.getMonth()!==m)exerciseOverviewCursor=new Date(d.getFullYear(),d.getMonth(),1,12);renderExerciseCalendar();if(alreadySelected)openBatchDayEditor(kk,exerciseOverviewPerson)};grid.appendChild(b)}
+ for(let i=0;i<42;i++){const d=new Date(start);d.setDate(start.getDate()+i);const kk=k(d),rows=(state.exercises||[]).filter(x=>x.date===kk&&x.person===exerciseOverviewPerson),b=document.createElement("button");b.type="button";b.className="exerciseCalDay"+(d.getMonth()!==m?" other":"")+(kk===k(new Date())?" today":"")+(kk===exerciseOverviewSelected?" selected":"");const types=[...new Set(rows.map(x=>x.typeId))],dots=types.slice(0,5).map(()=>'<span class="exerciseCalDot"></span>').join("")+(types.length>5?'<span class="exerciseCalMoreDots">＋</span>':"");b.innerHTML='<div class="exerciseCalNum">'+d.getDate()+'</div>'+(dots?'<div class="exerciseCalDots">'+dots+'</div>':"");b.onclick=()=>{const alreadySelected=(kk===exerciseOverviewSelected);exerciseOverviewSelected=kk;if(d.getMonth()!==m)exerciseOverviewCursor=new Date(d.getFullYear(),d.getMonth(),1,12);renderExerciseCalendar();if(alreadySelected)openBatchDayEditor(kk,exerciseOverviewPerson)};grid.appendChild(b)}
  renderExerciseDay();
 }
 function renderExerciseDay(){
@@ -1804,9 +1847,10 @@ function saveBatchAll(){
 function switchModuleTab(group,target){if((window.__shiftReadOnly||window.__shiftGuest)&&((group==="calendar"&&target==="calendarSettings")||(group==="exercise"&&(target==="exerciseInput"||target==="exerciseSettings"))))return;
  const attr=group==="calendar"?"data-calendar-tab":"data-ex-tab";
  document.querySelectorAll("["+attr+"]").forEach(b=>b.classList.toggle("active",b.getAttribute(attr)===target));
- const ids=group==="calendar"?["calendarMain","calendarSettings"]:["exerciseOverview","exerciseInput","exerciseSettings"];
+ const ids=group==="calendar"?["calendarMain","calendarSettings"]:["exerciseOverview","exerciseStatistics","exerciseInput","exerciseSettings"];
  ids.forEach(id=>document.getElementById(id)?.classList.toggle("active",id===target));
  if(target==="exerciseOverview")renderExercise();
+ if(target==="exerciseStatistics"){const n=new Date();exerciseStatsCursor=new Date(n.getFullYear(),n.getMonth(),1,12);renderExerciseMonthSummary();}
 }
 document.querySelectorAll("[data-calendar-tab]").forEach(b=>b.addEventListener("click",()=>{const t=b.dataset.calendarTab;if((window.__shiftReadOnly||window.__shiftGuest)&&t==="calendarSettings")return;if(t==="calendarSettings"){switchView("calendarSettings");document.querySelectorAll("[data-calendar-tab]").forEach(x=>x.classList.toggle("active",x.dataset.calendarTab==="calendarSettings"));}else{switchView("calendarView");document.querySelectorAll("[data-calendar-tab]").forEach(x=>x.classList.toggle("active",x.dataset.calendarTab==="calendarMain"));}}));
 document.querySelectorAll("[data-ex-tab]").forEach(b=>b.addEventListener("click",()=>switchModuleTab("exercise",b.dataset.exTab)));
@@ -1818,6 +1862,10 @@ loadDayExercises.addEventListener("click",loadBatchDay);loadLastExercises.addEve
 
 
 /* V29 explicit exercise overview controls */
+document.getElementById("exerciseStatsPrev").onclick=()=>{exerciseStatsCursor=new Date(exerciseStatsCursor.getFullYear(),exerciseStatsCursor.getMonth()-1,1,12);renderExerciseMonthSummary()};
+document.getElementById("exerciseStatsNext").onclick=()=>{exerciseStatsCursor=new Date(exerciseStatsCursor.getFullYear(),exerciseStatsCursor.getMonth()+1,1,12);renderExerciseMonthSummary()};
+document.getElementById("exerciseStatsTitle").onclick=()=>{const n=new Date();exerciseStatsCursor=new Date(n.getFullYear(),n.getMonth(),1,12);renderExerciseMonthSummary()};
+document.querySelectorAll(".exerciseStatsPersonBtn").forEach(b=>b.onclick=()=>{exerciseStatsPerson=b.dataset.statsPerson;renderExerciseMonthSummary()});
 document.getElementById("exerciseCalPrev").onclick=()=>{exerciseOverviewCursor=new Date(exerciseOverviewCursor.getFullYear(),exerciseOverviewCursor.getMonth()-1,1,12);renderExerciseCalendar()};
 document.getElementById("exerciseCalNext").onclick=()=>{exerciseOverviewCursor=new Date(exerciseOverviewCursor.getFullYear(),exerciseOverviewCursor.getMonth()+1,1,12);renderExerciseCalendar()};
 document.getElementById("exerciseCalTitle").onclick=()=>{const n=new Date();exerciseOverviewCursor=new Date(n.getFullYear(),n.getMonth(),1,12);exerciseOverviewSelected=k(n);renderExerciseCalendar()};
