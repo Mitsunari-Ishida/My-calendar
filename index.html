@@ -322,6 +322,15 @@ body.readerMode .exerciseModuleTabs,body.guestMode .exerciseModuleTabs{grid-temp
  .exerciseModuleTabs .moduleTab{font-size:12px!important;padding:8px 2px!important}
  body.readerMode .exerciseModuleTabs,body.guestMode .exerciseModuleTabs{grid-template-columns:repeat(2,minmax(0,1fr))!important}
 }
+
+/* V37 */
+#exerciseOverview .exerciseCalDay{min-height:62px!important;display:grid!important;grid-template-rows:28px 16px!important;align-content:start!important;justify-items:center!important;padding:5px 2px!important;overflow:hidden!important}
+#exerciseOverview .exerciseCalNum{position:static!important;width:28px!important;height:28px!important;margin:0!important;display:flex!important;align-items:center!important;justify-content:center!important;line-height:28px!important;border-radius:50%!important}
+#exerciseOverview .exerciseCalDots{min-height:16px!important;margin-top:5px!important;display:flex!important;align-items:center!important;justify-content:center!important;gap:3px!important;max-width:42px!important}
+#exerciseOverview .exerciseCalDay.selected .exerciseCalNum{width:28px!important;height:28px!important;margin:0!important;background:#3f3a33!important;color:#fff!important}
+#exerciseOverview .exerciseCalDay.today:not(.selected) .exerciseCalNum{outline:1.5px solid #8b8174!important;outline-offset:-2px!important}
+.exercisePictogram{display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:9px;background:#eef3f7;border:1px solid #dde6ec;font-size:16px;line-height:1;flex:0 0 28px;margin-right:7px;vertical-align:middle}
+.exerciseStatName,.exerciseDayRecord strong{display:flex;align-items:center}
 </style>
 </head>
 <body>
@@ -342,7 +351,7 @@ body.readerMode .exerciseModuleTabs,body.guestMode .exerciseModuleTabs{grid-temp
     background:#fff;border:1px solid #d1d5db;border-radius:14px;
     box-shadow:0 10px 28px rgba(0,0,0,.18);padding:12px;
   ">
-    <div style="font-size:10px;color:#9ca3af;margin-bottom:5px">版本：V36</div>
+    <div style="font-size:10px;color:#9ca3af;margin-bottom:5px">版本：V37</div>
     <div id="roleBadge">尚未登入</div>
     <div id="firebaseLoginStatus" style="font-weight:700;font-size:14px;margin-bottom:6px">尚未登入雲端</div>
     <div id="firebaseUid" style="font-size:11px;color:#6b7280;word-break:break-all;margin-bottom:10px">
@@ -1347,6 +1356,7 @@ function monthRows(month){return(state.exercises||[]).filter(x=>(x.date||"").sta
 function renderTrend(){const b=document.getElementById("exerciseTrend"),typeId=exerciseTrendType.value,rows=(state.exercises||[]).filter(x=>x.typeId===typeId).sort((a,b)=>a.date.localeCompare(b.date)).slice(-12);b.innerHTML="";if(!rows.length){b.innerHTML="<div class='exerciseEmpty'>尚無這個項目的紀錄</div>";return}const max=Math.max(...rows.map(x=>Number(x.value)||0),1);rows.forEach(x=>{const r=document.createElement("div");r.className="trendRow";r.innerHTML="<span>"+x.date.slice(5)+"</span><div class='trendBarWrap'><div class='trendBar' style='width:"+Math.max(2,(Number(x.value)||0)/max*100)+"%'></div></div><strong>"+x.value+(x.unit||"")+"</strong>";b.appendChild(r)})}
 let exerciseOverviewPerson="a",exerciseOverviewCursor=new Date(new Date().getFullYear(),new Date().getMonth(),1,12),exerciseOverviewSelected=k(new Date());
 let exerciseStatsPerson="a",exerciseStatsCursor=new Date(new Date().getFullYear(),new Date().getMonth(),1,12);
+function exercisePictogram(t){return '<span class="exercisePictogram" aria-hidden="true">'+((t&&t.icon)||"🏃")+'</span>'}
 function renderExerciseMonthSummary(){
  const st=document.getElementById("exerciseStatsTitle");if(st)st.textContent=exerciseStatsCursor.getFullYear()+"年 "+(exerciseStatsCursor.getMonth()+1)+"月";
  document.querySelectorAll(".exerciseStatsPersonBtn").forEach(b=>{b.classList.toggle("active",b.dataset.statsPerson===exerciseStatsPerson);b.textContent=b.dataset.statsPerson==="a"?(state.people.aName||"A"):(state.people.bName||"B")});
@@ -1360,19 +1370,19 @@ function renderExerciseMonthSummary(){
  const box=document.getElementById("exerciseMonthStats");box.innerHTML='<div class="exerciseStatRow exerciseStatHead"><span>運動項目</span><span class="exerciseStatVal">本月累計</span><span class="exerciseStatDays">天數</span><span class="exerciseStatAvg">日均</span></div>';
  const groups=new Map();rows.forEach(x=>{const key=x.typeId+"|"+(x.unit||"");if(!groups.has(key))groups.set(key,{typeId:x.typeId,unit:x.unit||"",total:0,dates:new Set()});const g=groups.get(key);g.total+=Number(x.value)||0;g.dates.add(x.date)});
  if(!groups.size){box.innerHTML+='<div class="exerciseDayEmpty">本月尚無運動紀錄</div>';return}
- [...groups.values()].forEach(g=>{const t=exType(g.typeId),days=g.dates.size,avg=days?Math.round(g.total/days):0;const r=document.createElement("div");r.className="exerciseStatRow";r.innerHTML='<span class="exerciseStatName">'+(t.icon||"🏃")+' '+t.name+'</span><strong class="exerciseStatVal">'+g.total.toLocaleString()+g.unit+'</strong><span class="exerciseStatDays">'+days+'天</span><span class="exerciseStatAvg">'+avg+g.unit+'</span>';box.appendChild(r)})
+ [...groups.values()].forEach(g=>{const t=exType(g.typeId),days=g.dates.size,avg=days?Math.round(g.total/days):0;const r=document.createElement("div");r.className="exerciseStatRow";r.innerHTML='<span class="exerciseStatName">'+exercisePictogram(t)+'<span>'+t.name+'</span></span><strong class="exerciseStatVal">'+g.total.toLocaleString()+g.unit+'</strong><span class="exerciseStatDays">'+days+'天</span><span class="exerciseStatAvg">'+avg+g.unit+'</span>';box.appendChild(r)})
 }
 function renderExerciseCalendar(){
  const grid=document.getElementById("exerciseCalendarGrid");if(!grid)return;
  const y=exerciseOverviewCursor.getFullYear(),m=exerciseOverviewCursor.getMonth(),first=new Date(y,m,1,12),start=new Date(y,m,1-first.getDay(),12);
  exerciseCalTitleEl.textContent=y+"年 "+(m+1)+"月";
- document.querySelectorAll(".exercisePersonBtn").forEach(b=>{b.classList.toggle("active",b.dataset.exPerson===exerciseOverviewPerson);b.textContent=b.dataset.exPerson==="a"?(state.people.aName||"A"):(state.people.bName||"B")});
+ document.querySelectorAll(".exercisePersonBtn[data-ex-person]").forEach(b=>{b.classList.toggle("active",b.dataset.exPerson===exerciseOverviewPerson);b.textContent=b.dataset.exPerson==="a"?(state.people.aName||"A"):(state.people.bName||"B")});
  grid.innerHTML="";
  for(let i=0;i<42;i++){const d=new Date(start);d.setDate(start.getDate()+i);const kk=k(d),rows=(state.exercises||[]).filter(x=>x.date===kk&&x.person===exerciseOverviewPerson),b=document.createElement("button");b.type="button";b.className="exerciseCalDay"+(d.getMonth()!==m?" other":"")+(kk===k(new Date())?" today":"")+(kk===exerciseOverviewSelected?" selected":"");const types=[...new Set(rows.map(x=>x.typeId))],dots=types.slice(0,5).map(()=>'<span class="exerciseCalDot"></span>').join("")+(types.length>5?'<span class="exerciseCalMoreDots">＋</span>':"");b.innerHTML='<div class="exerciseCalNum">'+d.getDate()+'</div>'+(dots?'<div class="exerciseCalDots">'+dots+'</div>':"");b.onclick=()=>{const alreadySelected=(kk===exerciseOverviewSelected);exerciseOverviewSelected=kk;if(d.getMonth()!==m)exerciseOverviewCursor=new Date(d.getFullYear(),d.getMonth(),1,12);renderExerciseCalendar();if(alreadySelected)openBatchDayEditor(kk,exerciseOverviewPerson)};grid.appendChild(b)}
  renderExerciseDay();
 }
 function renderExerciseDay(){
- const box=document.getElementById("exerciseDayList");if(!box)return;const who=exerciseOverviewPerson==="a"?(state.people.aName||"A"):(state.people.bName||"B");exerciseDayTitleEl.textContent=exerciseOverviewSelected+" · "+who;const rows=(state.exercises||[]).filter(x=>x.date===exerciseOverviewSelected&&x.person===exerciseOverviewPerson);box.innerHTML="";if(!rows.length){box.innerHTML="<div class='exerciseDayEmpty'>這一天沒有運動紀錄</div>";return}rows.forEach(rec=>{const t=exType(rec.typeId),r=document.createElement("div");r.className="exerciseDayRecord";const x=document.createElement("div");x.innerHTML="<strong>"+(t.icon||"🏃")+" "+t.name+"　"+rec.value+(rec.unit||"")+"</strong>"+(rec.note?"<div class='exerciseMeta'>"+rec.note+"</div>":"");const a=document.createElement("div");a.className="exerciseDayActions";const ed=document.createElement("button");ed.className="btn secondary exerciseMini";ed.textContent="修改";ed.onclick=()=>openBatchDayEditor(rec.date,rec.person);const del=document.createElement("button");del.className="btn secondary exerciseMini";del.textContent="刪除";del.onclick=()=>{if(confirm("刪除這筆紀錄？")){state.exercises=state.exercises.filter(z=>z.id!==rec.id);persist();renderExercise();render()}};a.append(ed,del);r.append(x,a);box.appendChild(r)})}
+ const box=document.getElementById("exerciseDayList");if(!box)return;const who=exerciseOverviewPerson==="a"?(state.people.aName||"A"):(state.people.bName||"B");exerciseDayTitleEl.textContent=exerciseOverviewSelected+" · "+who;const rows=(state.exercises||[]).filter(x=>x.date===exerciseOverviewSelected&&x.person===exerciseOverviewPerson);box.innerHTML="";if(!rows.length){box.innerHTML="<div class='exerciseDayEmpty'>這一天沒有運動紀錄</div>";return}rows.forEach(rec=>{const t=exType(rec.typeId),r=document.createElement("div");r.className="exerciseDayRecord";const x=document.createElement("div");x.innerHTML="<strong>"+exercisePictogram(t)+"<span>"+t.name+"　"+rec.value+(rec.unit||"")+"</span></strong>"+(rec.note?"<div class='exerciseMeta'>"+rec.note+"</div>":"");const a=document.createElement("div");a.className="exerciseDayActions";const ed=document.createElement("button");ed.className="btn secondary exerciseMini";ed.textContent="修改";ed.onclick=()=>openBatchDayEditor(rec.date,rec.person);const del=document.createElement("button");del.className="btn secondary exerciseMini";del.textContent="刪除";del.onclick=()=>{if(confirm("刪除這筆紀錄？")){state.exercises=state.exercises.filter(z=>z.id!==rec.id);persist();renderExercise();render()}};a.append(ed,del);r.append(x,a);box.appendChild(r)})}
 function renderExercise(){refreshExTypes();renderExTypeList();renderRoutineList();refreshBatchExerciseUI();renderExerciseCalendar()}
 function renderRoutineChecks(){const b=document.getElementById("routineTypeChecks");if(!b)return;b.innerHTML="";(state.exerciseTypes||[]).forEach(t=>{const l=document.createElement("label");l.className="routineCheck";l.innerHTML='<input type="checkbox" value="'+t.id+'"><span>'+(t.icon||"🏃")+' '+t.name+'</span>';b.appendChild(l)})}
 function refreshRoutineSelect(){refreshBatchExerciseUI();const s=document.getElementById("exerciseRoutineSelect");if(!s)return;s.innerHTML='<option value="">選擇課表</option>';(state.exerciseRoutines||[]).forEach(r=>{const o=document.createElement("option");o.value=r.id;o.textContent=r.name;s.appendChild(o)})}
@@ -1869,7 +1879,7 @@ document.querySelectorAll(".exerciseStatsPersonBtn").forEach(b=>b.onclick=()=>{e
 document.getElementById("exerciseCalPrev").onclick=()=>{exerciseOverviewCursor=new Date(exerciseOverviewCursor.getFullYear(),exerciseOverviewCursor.getMonth()-1,1,12);renderExerciseCalendar()};
 document.getElementById("exerciseCalNext").onclick=()=>{exerciseOverviewCursor=new Date(exerciseOverviewCursor.getFullYear(),exerciseOverviewCursor.getMonth()+1,1,12);renderExerciseCalendar()};
 document.getElementById("exerciseCalTitle").onclick=()=>{const n=new Date();exerciseOverviewCursor=new Date(n.getFullYear(),n.getMonth(),1,12);exerciseOverviewSelected=k(n);renderExerciseCalendar()};
-document.querySelectorAll(".exercisePersonBtn").forEach(b=>b.onclick=()=>{exerciseOverviewPerson=b.dataset.exPerson;renderExerciseCalendar()});
+document.querySelectorAll(".exercisePersonBtn[data-ex-person]").forEach(b=>b.onclick=()=>{exerciseOverviewPerson=b.dataset.exPerson;renderExerciseCalendar()});
 window.__shiftCloudBridge={
   getStateJson(){
     return JSON.stringify(state);
