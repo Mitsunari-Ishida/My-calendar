@@ -339,6 +339,29 @@ body.readerMode .exerciseModuleTabs,body.guestMode .exerciseModuleTabs{grid-temp
 .routineIconLabel .exercisePictogram{width:32px;height:32px;flex-basis:32px;border-radius:9px}
 .routineIconLabel .exercisePictogram img{width:32px;height:32px}
 .exerciseIconPreview .exercisePictogram{border-radius:10px;border:2px solid rgba(255,255,255,.96);box-shadow:0 2px 6px rgba(0,0,0,.10)}
+
+/* V42 grouped exercise sets */
+.exerciseBatchGroup{border:1px solid #e5ded2;border-radius:15px;background:#fffdfa;padding:10px;margin:9px 0;box-shadow:0 1px 4px rgba(63,58,51,.04)}
+.exerciseBatchGroupHead{display:grid;grid-template-columns:34px minmax(0,1fr) minmax(58px,.55fr) 34px;gap:6px;align-items:center}
+.exerciseBatchGroupHead .exercisePictogram{margin:0;width:32px;height:32px;flex-basis:32px;border-radius:10px;border:2px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,.10)}
+.exerciseBatchGroupHead .exercisePictogram img{width:32px;height:32px}
+.exerciseBatchGroupHead select,.exerciseBatchGroupHead input{margin:0!important;min-width:0!important}
+.exerciseSetList{display:grid;gap:6px;margin-top:9px}
+.exerciseSetRow{display:grid;grid-template-columns:52px minmax(0,1fr) auto 32px;gap:6px;align-items:center}
+.exerciseSetLabel{font-size:12px;font-weight:800;color:#7b7266;text-align:right}
+.exerciseSetValue{margin:0!important;min-width:0!important;height:38px!important}
+.exerciseSetUnit{font-size:12px;color:#7b7266;white-space:nowrap;min-width:24px}
+.exerciseSetRemove{width:32px!important;height:32px!important;min-height:32px!important;padding:0!important;margin:0!important;border-radius:9px!important}
+.exerciseAddSet{width:auto!important;min-height:34px!important;margin:8px 0 0 58px!important;padding:6px 11px!important;font-size:12px!important}
+.exerciseGroupRemove{width:34px!important;min-height:36px!important;padding:0!important;margin:0!important;border-radius:9px!important}
+.exerciseDaySetSummary{font-size:12px;color:#746b5e;margin-top:3px;padding-left:39px}
+@media(max-width:420px){
+ .exerciseBatchGroup{padding:8px}
+ .exerciseBatchGroupHead{grid-template-columns:32px minmax(0,1fr) 62px 32px;gap:4px}
+ .exerciseSetRow{grid-template-columns:46px minmax(0,1fr) auto 30px;gap:4px}
+ .exerciseAddSet{margin-left:50px!important}
+}
+
 </style>
 </head>
 <body>
@@ -359,7 +382,7 @@ body.readerMode .exerciseModuleTabs,body.guestMode .exerciseModuleTabs{grid-temp
     background:#fff;border:1px solid #d1d5db;border-radius:14px;
     box-shadow:0 10px 28px rgba(0,0,0,.18);padding:12px;
   ">
-    <div style="font-size:10px;color:#9ca3af;margin-bottom:5px">版本：V41</div>
+    <div style="font-size:10px;color:#9ca3af;margin-bottom:5px">版本：V42</div>
     <div id="roleBadge">尚未登入</div>
     <div id="firebaseLoginStatus" style="font-weight:700;font-size:14px;margin-bottom:6px">尚未登入雲端</div>
     <div id="firebaseUid" style="font-size:11px;color:#6b7280;word-break:break-all;margin-bottom:10px">
@@ -1406,7 +1429,7 @@ function renderExerciseCalendar(){
  renderExerciseDay();
 }
 function renderExerciseDay(){
- const box=document.getElementById("exerciseDayList");if(!box)return;const who=exerciseOverviewPerson==="a"?(state.people.aName||"A"):(state.people.bName||"B");exerciseDayTitleEl.textContent=exerciseOverviewSelected+" · "+who;const rows=(state.exercises||[]).filter(x=>x.date===exerciseOverviewSelected&&x.person===exerciseOverviewPerson);box.innerHTML="";if(!rows.length){box.innerHTML="<div class='exerciseDayEmpty'>這一天沒有運動紀錄</div>";return}rows.forEach(rec=>{const t=exType(rec.typeId),r=document.createElement("div");r.className="exerciseDayRecord";const x=document.createElement("div");x.innerHTML="<strong>"+exercisePictogram(t)+"<span>"+t.name+"　"+rec.value+(rec.unit||"")+"</span></strong>"+(rec.note?"<div class='exerciseMeta'>"+rec.note+"</div>":"");const a=document.createElement("div");a.className="exerciseDayActions";const ed=document.createElement("button");ed.className="btn secondary exerciseMini";ed.textContent="修改";ed.onclick=()=>openBatchDayEditor(rec.date,rec.person);const del=document.createElement("button");del.className="btn secondary exerciseMini";del.textContent="刪除";del.onclick=()=>{if(confirm("刪除這筆紀錄？")){state.exercises=state.exercises.filter(z=>z.id!==rec.id);persist();renderExercise();render()}};a.append(ed,del);r.append(x,a);box.appendChild(r)})}
+ const box=document.getElementById("exerciseDayList");if(!box)return;const who=exerciseOverviewPerson==="a"?(state.people.aName||"A"):(state.people.bName||"B");exerciseDayTitleEl.textContent=exerciseOverviewSelected+" · "+who;const rows=(state.exercises||[]).filter(x=>x.date===exerciseOverviewSelected&&x.person===exerciseOverviewPerson);box.innerHTML="";if(!rows.length){box.innerHTML="<div class='exerciseDayEmpty'>這一天沒有運動紀錄</div>";return}groupExerciseRows(rows).forEach(g=>{const t=exType(g.typeId),r=document.createElement("div");r.className="exerciseDayRecord";const counts=new Map();g.sets.forEach(rec=>{const key=String(rec.value);counts.set(key,(counts.get(key)||0)+1)});const summary=[...counts.entries()].map(([v,c])=>v+(g.unit||"")+(c>1?" × "+c+"組":" × 1組")).join("、");const x=document.createElement("div");x.innerHTML="<strong>"+exercisePictogram(t)+"<span>"+t.name+"</span></strong><div class='exerciseDaySetSummary'>"+summary+"</div>";const a=document.createElement("div");a.className="exerciseDayActions";const ed=document.createElement("button");ed.className="btn secondary exerciseMini";ed.textContent="修改";ed.onclick=()=>openBatchDayEditor(exerciseOverviewSelected,exerciseOverviewPerson);const del=document.createElement("button");del.className="btn secondary exerciseMini";del.textContent="刪除";del.onclick=()=>{if(confirm("刪除今天的「"+t.name+"」全部組數？")){const ids=new Set(g.sets.map(z=>z.id));state.exercises=state.exercises.filter(z=>!ids.has(z.id));persist();renderExercise();render()}};a.append(ed,del);r.append(x,a);box.appendChild(r)})}
 function renderExercise(){refreshExTypes();renderExTypeList();renderRoutineList();refreshBatchExerciseUI();renderExerciseCalendar()}
 function renderRoutineChecks(){const b=document.getElementById("routineTypeChecks");if(!b)return;b.innerHTML="";(state.exerciseTypes||[]).forEach(t=>{const l=document.createElement("label");l.className="routineCheck";l.innerHTML='<input type="checkbox" value="'+t.id+'"><span class="routineIconLabel">'+exercisePictogram(t)+'<span>'+t.name+'</span></span>';b.appendChild(l)})}
 function refreshRoutineSelect(){refreshBatchExerciseUI();const s=document.getElementById("exerciseRoutineSelect");if(!s)return;s.innerHTML='<option value="">選擇課表</option>';(state.exerciseRoutines||[]).forEach(r=>{const o=document.createElement("option");o.value=r.id;o.textContent=r.name;s.appendChild(o)})}
@@ -1841,16 +1864,37 @@ function refreshBatchExerciseUI(){
  p.options[0].textContent=state.people.aName||"A";p.options[1].textContent=state.people.bName||"B";
  const old=r.value;r.innerHTML='<option value="">選擇課表</option>';(state.exerciseRoutines||[]).forEach(x=>{const o=document.createElement("option");o.value=x.id;o.textContent=x.name;r.appendChild(o)});if((state.exerciseRoutines||[]).some(x=>x.id===old))r.value=old;
 }
-function batchRow(data={}){
- const box=document.getElementById("exerciseBatchRows"),row=document.createElement("div");row.className="exerciseBatchRow";
- const sel=document.createElement("select");(state.exerciseTypes||[]).forEach(t=>{const o=document.createElement("option");o.value=t.id;o.textContent=t.name;sel.appendChild(o)});if(data.typeId)sel.value=data.typeId;
- const val=document.createElement("input");val.type="number";val.min="0";val.step="0.1";val.placeholder="數值";val.value=data.value??"";
- const unit=document.createElement("input");unit.type="text";unit.placeholder="單位";unit.value=data.unit||exType(sel.value).unit||"";
- sel.onchange=()=>unit.value=exType(sel.value).unit||"";
- const del=document.createElement("button");del.type="button";del.className="btn secondary exerciseBatchRemove";del.textContent="×";del.onclick=()=>row.remove();
- row.dataset.recordId=data.id||"";row.append(sel,val,unit,del);box.appendChild(row);
+function addExerciseSetRow(group,data={}){
+ const list=group.querySelector(".exerciseSetList"),row=document.createElement("div");row.className="exerciseSetRow";
+ const label=document.createElement("span");label.className="exerciseSetLabel";
+ const val=document.createElement("input");val.className="exerciseSetValue";val.type="number";val.min="0";val.step="0.1";val.placeholder="數值";val.value=data.value??"";val.dataset.recordId=data.id||"";
+ const unitText=document.createElement("span");unitText.className="exerciseSetUnit";unitText.textContent=group.querySelector(".exerciseGroupUnit")?.value||"";
+ const del=document.createElement("button");del.type="button";del.className="btn secondary exerciseSetRemove";del.textContent="−";del.onclick=()=>{row.remove();refreshExerciseSetLabels(group)};
+ row.append(label,val,unitText,del);list.appendChild(row);refreshExerciseSetLabels(group);return row;
 }
-function setBatchRows(rows){const box=document.getElementById("exerciseBatchRows");box.innerHTML="";rows.forEach(x=>batchRow(x));if(!rows.length)batchRow()}
+function refreshExerciseSetLabels(group){
+ [...group.querySelectorAll(".exerciseSetRow")].forEach((r,i)=>{const l=r.querySelector(".exerciseSetLabel");if(l)l.textContent="第 "+(i+1)+" 組";const u=r.querySelector(".exerciseSetUnit");if(u)u.textContent=group.querySelector(".exerciseGroupUnit")?.value||""})
+}
+function batchRow(data={}){
+ const box=document.getElementById("exerciseBatchRows"),group=document.createElement("div");group.className="exerciseBatchGroup";
+ const head=document.createElement("div");head.className="exerciseBatchGroupHead";
+ const icon=document.createElement("span");icon.innerHTML=exercisePictogram(exType(data.typeId||(state.exerciseTypes||[])[0]?.id));
+ const sel=document.createElement("select");sel.className="exerciseGroupType";(state.exerciseTypes||[]).forEach(t=>{const o=document.createElement("option");o.value=t.id;o.textContent=t.name;sel.appendChild(o)});if(data.typeId)sel.value=data.typeId;
+ const unit=document.createElement("input");unit.className="exerciseGroupUnit";unit.type="text";unit.placeholder="單位";unit.value=data.unit||exType(sel.value).unit||"";
+ const del=document.createElement("button");del.type="button";del.className="btn secondary exerciseGroupRemove";del.textContent="×";del.onclick=()=>group.remove();
+ head.append(icon,sel,unit,del);
+ const list=document.createElement("div");list.className="exerciseSetList";
+ const add=document.createElement("button");add.type="button";add.className="btn secondary exerciseAddSet";add.textContent="＋ 新增一組";add.onclick=()=>addExerciseSetRow(group,{});
+ group.append(head,list,add);box.appendChild(group);
+ const sets=Array.isArray(data.sets)?data.sets:[data];sets.forEach(x=>addExerciseSetRow(group,x));if(!sets.length)addExerciseSetRow(group,{});
+ sel.onchange=()=>{unit.value=exType(sel.value).unit||"";icon.innerHTML=exercisePictogram(exType(sel.value));refreshExerciseSetLabels(group)};
+ unit.oninput=()=>refreshExerciseSetLabels(group);
+ return group;
+}
+function groupExerciseRows(rows){
+ const map=new Map();(rows||[]).forEach(x=>{const key=x.typeId+"|"+(x.unit||"");if(!map.has(key))map.set(key,{typeId:x.typeId,unit:x.unit||exType(x.typeId).unit||"",sets:[]});map.get(key).sets.push(x)});return [...map.values()]
+}
+function setBatchRows(rows){const box=document.getElementById("exerciseBatchRows");box.innerHTML="";groupExerciseRows(rows).forEach(x=>batchRow(x));if(!rows.length)batchRow()}
 function openBatchDayEditor(date,person){if(window.__shiftReadOnly||window.__shiftGuest)return;
  batchExerciseDate.value=date;
  batchExercisePerson.value=person;
@@ -1874,9 +1918,10 @@ function loadBatchRoutine(){
 }
 function saveBatchAll(){
  const date=batchExerciseDate.value,person=batchExercisePerson.value;if(!date){alert("請選擇日期");return}
- const rows=[...exerciseBatchRows.querySelectorAll(".exerciseBatchRow")].map((r,i)=>{const els=r.querySelectorAll("select,input");return{id:r.dataset.recordId||("ex_"+Date.now()+"_"+i),date,person,typeId:els[0].value,value:Number(els[1].value)||0,unit:els[2].value.trim(),note:""}}).filter(x=>x.typeId);
+ const rows=[];let seq=0;
+ [...exerciseBatchRows.querySelectorAll(".exerciseBatchGroup")].forEach(g=>{const typeId=g.querySelector(".exerciseGroupType")?.value||"",unit=(g.querySelector(".exerciseGroupUnit")?.value||"").trim();[...g.querySelectorAll(".exerciseSetValue")].forEach(v=>{if(v.value==="")return;rows.push({id:v.dataset.recordId||("ex_"+Date.now()+"_"+(seq++)),date,person,typeId,value:Number(v.value)||0,unit,note:""})})});
  if(batchExerciseSourceDate===date)state.exercises=state.exercises.filter(x=>!(x.date===date&&x.person===person));
- state.exercises.push(...rows);persist();exerciseOverviewPerson=person;exerciseOverviewSelected=date;const d=new Date(date+"T12:00:00");exerciseOverviewCursor=new Date(d.getFullYear(),d.getMonth(),1,12);batchExerciseSourceDate=date;renderExercise();render();alert("已一次儲存 "+rows.length+" 筆運動紀錄");
+ state.exercises.push(...rows);persist();exerciseOverviewPerson=person;exerciseOverviewSelected=date;const d=new Date(date+"T12:00:00");exerciseOverviewCursor=new Date(d.getFullYear(),d.getMonth(),1,12);batchExerciseSourceDate=date;renderExercise();render();alert("已儲存 "+rows.length+" 組運動紀錄");
 }
 function switchModuleTab(group,target){if((window.__shiftReadOnly||window.__shiftGuest)&&((group==="calendar"&&target==="calendarSettings")||(group==="exercise"&&(target==="exerciseInput"||target==="exerciseSettings"))))return;
  const attr=group==="calendar"?"data-calendar-tab":"data-ex-tab";
